@@ -82,13 +82,25 @@ export default function Onboarding2() {
         />
 
         <Text style={styles.label}>Gender</Text>
-        <TextInput
-          placeholder="Choose your gender"
-          placeholderTextColor="#ccc"
-          style={styles.input}
-          value={form.gender}
-          onChangeText={(val) => handleInputChange("gender", val)}
-        />
+        <View style={styles.dropdownContainer}>
+          {["Male", "Female", "Other"].map((genderOption) => (
+            <TouchableOpacity
+              key={genderOption}
+              style={[
+                styles.genderOption,
+                form.gender === genderOption && styles.genderOptionSelected,
+              ]}
+              onPress={() => handleInputChange("gender", genderOption)}
+            >
+              <Text style={[
+                styles.genderOptionText,
+                form.gender === genderOption && styles.genderOptionTextSelected,
+              ]}>
+                {genderOption}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         <Text style={styles.label}>Location</Text>
         <TextInput
@@ -171,6 +183,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "MontserratRegular",
     marginBottom: 16,
+  },
+  dropdownContainer: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 16,
+  },
+  genderOption: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: "#fff",
+  },
+  genderOptionSelected: {
+    borderColor: "#000",
+    backgroundColor: "#000",
+  },
+  genderOptionText: {
+    fontSize: 14,
+    fontFamily: "MontserratRegular",
+    color: "#555",
+  },
+  genderOptionTextSelected: {
+    color: "#fff",
+    fontFamily: "MontserratSemiBold",
   },
   continueButton: {
     backgroundColor: "#000",
