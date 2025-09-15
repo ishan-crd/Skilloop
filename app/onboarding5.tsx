@@ -2,13 +2,13 @@ import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 const SOCIAL_ICONS = [
@@ -89,7 +89,9 @@ export default function Onboarding5() {
     >
       {/* Top bar */}
       <View style={styles.topBar}>
-        <Text style={styles.backArrow}>←</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.backArrow}>←</Text>
+        </TouchableOpacity>
         <View style={styles.progressBarContainer}>
           {[...Array(7)].map((_, i) => (
             <View
@@ -173,7 +175,7 @@ export default function Onboarding5() {
       {/* Continue */}
       <TouchableOpacity
         style={styles.continueButton}
-        onPress={() => router.push("/onboarding6")}
+        onPress={() => router.push("/onboarding7")}
       >
         <Text style={styles.continueText}>Continue</Text>
       </TouchableOpacity>
@@ -196,6 +198,7 @@ const styles = StyleSheet.create({
   backArrow: {
     fontSize: 24,
     marginRight: 10,
+    padding: 8,
   },
   progressBarContainer: {
     flexDirection: "row",

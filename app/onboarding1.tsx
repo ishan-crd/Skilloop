@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useOnboarding } from "../contexts/OnboardingContext";
 
 const { width } = Dimensions.get("window");
 
@@ -27,12 +28,18 @@ const roles = [
     description: "I'm studying or learning new skills",
     emoji: "🎓",
   },
+  {
+    title: "Company",
+    description: "I represent a company or organization",
+    emoji: "🏢",
+  },
 ];
 
 export default function Onboarding1() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const router = useRouter();
+  const { updateOnboardingData } = useOnboarding();
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -52,7 +59,9 @@ export default function Onboarding1() {
     <View style={styles.container}>
       {/* Back Button + Progress Bar */}
       <View style={styles.topBar}>
-        <Text style={styles.backArrow}>←</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.backArrow}>←</Text>
+        </TouchableOpacity>
         <View style={styles.progressBarContainer}>
           {[...Array(7)].map((_, i) => (
             <View
@@ -92,7 +101,10 @@ export default function Onboarding1() {
       <TouchableOpacity
         style={styles.continueButton}
         onPress={() => {
-          if (selectedRole) router.push("/onboarding2");
+          if (selectedRole) {
+            updateOnboardingData({ role: selectedRole });
+            router.push("/onboarding2");
+          }
         }}
       >
         <Text style={styles.continueText}>Continue</Text>
@@ -116,6 +128,7 @@ const styles = StyleSheet.create({
   backArrow: {
     fontSize: 24,
     marginRight: 10,
+    padding: 8,
   },
   progressBarContainer: {
     flexDirection: "row",

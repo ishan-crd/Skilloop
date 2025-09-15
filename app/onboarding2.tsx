@@ -2,18 +2,27 @@ import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import { useOnboarding } from "../contexts/OnboardingContext";
 
 export default function Onboarding2() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const router = useRouter();
+  const { onboardingData, updateOnboardingData } = useOnboarding();
 
   const [form, setForm] = useState({
+    name: onboardingData.name,
+    age: onboardingData.age,
+    gender: onboardingData.gender,
+    location: onboardingData.location,
+  });
+
+  const [errors, setErrors] = useState({
     name: "",
     age: "",
     gender: "",
@@ -36,13 +45,58 @@ export default function Onboarding2() {
 
   const handleInputChange = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+    // Clear error when user starts typing
+    if (errors[key as keyof typeof errors]) {
+      setErrors((prev) => ({ ...prev, [key]: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {
+      name: "",
+      age: "",
+      gender: "",
+      location: "",
+    };
+
+    if (!form.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+    if (!form.age.trim()) {
+      newErrors.age = "Age is required";
+    } else if (isNaN(Number(form.age)) || Number(form.age) < 1 || Number(form.age) > 120) {
+      newErrors.age = "Please enter a valid age";
+    }
+    if (!form.gender) {
+      newErrors.gender = "Please select your gender";
+    }
+    if (!form.location.trim()) {
+      newErrors.location = "Location is required";
+    }
+
+    setErrors(newErrors);
+    return !Object.values(newErrors).some(error => error !== "");
+  };
+
+  const handleContinue = () => {
+    if (validateForm()) {
+      updateOnboardingData({
+        name: form.name,
+        age: form.age,
+        gender: form.gender,
+        location: form.location,
+      });
+      router.push("/onboarding3");
+    }
   };
 
   return (
     <View style={styles.container}>
       {/* Back + Progress */}
       <View style={styles.topBar}>
-        <Text style={styles.backArrow}>←</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.backArrow}>←</Text>
+        </TouchableOpacity>
         <View style={styles.progressBarContainer}>
           {[...Array(7)].map((_, i) => (
             <View
@@ -66,20 +120,22 @@ export default function Onboarding2() {
         <TextInput
           placeholder="Elon Musk"
           placeholderTextColor="#ccc"
-          style={styles.input}
+          style={[styles.input, errors.name ? styles.inputError : null]}
           value={form.name}
           onChangeText={(val) => handleInputChange("name", val)}
         />
+        {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
 
         <Text style={styles.label}>Age</Text>
         <TextInput
           placeholder="21"
           placeholderTextColor="#ccc"
-          style={styles.input}
+          style={[styles.input, errors.age ? styles.inputError : null]}
           keyboardType="numeric"
           value={form.age}
           onChangeText={(val) => handleInputChange("age", val)}
         />
+        {errors.age ? <Text style={styles.errorText}>{errors.age}</Text> : null}
 
         <Text style={styles.label}>Gender</Text>
         <View style={styles.dropdownContainer}>
@@ -89,6 +145,7 @@ export default function Onboarding2() {
               style={[
                 styles.genderOption,
                 form.gender === genderOption && styles.genderOptionSelected,
+                errors.gender && !form.gender && styles.genderOptionError,
               ]}
               onPress={() => handleInputChange("gender", genderOption)}
             >
@@ -101,21 +158,23 @@ export default function Onboarding2() {
             </TouchableOpacity>
           ))}
         </View>
+        {errors.gender ? <Text style={styles.errorText}>{errors.gender}</Text> : null}
 
         <Text style={styles.label}>Location</Text>
         <TextInput
           placeholder="Mars"
           placeholderTextColor="#ccc"
-          style={styles.input}
+          style={[styles.input, errors.location ? styles.inputError : null]}
           value={form.location}
           onChangeText={(val) => handleInputChange("location", val)}
         />
+        {errors.location ? <Text style={styles.errorText}>{errors.location}</Text> : null}
       </View>
 
       {/* Continue Button */}
       <TouchableOpacity
         style={styles.continueButton}
-        onPress={() => router.push("/onboarding3")}
+        onPress={handleContinue}
       >
         <Text style={styles.continueText}>Continue</Text>
       </TouchableOpacity>
@@ -138,6 +197,7 @@ const styles = StyleSheet.create({
   backArrow: {
     fontSize: 24,
     marginRight: 10,
+    padding: 8,
   },
   progressBarContainer: {
     flexDirection: "row",
@@ -209,6 +269,19 @@ const styles = StyleSheet.create({
   genderOptionTextSelected: {
     color: "#fff",
     fontFamily: "MontserratSemiBold",
+  },
+  genderOptionError: {
+    borderColor: "#EF4444",
+  },
+  inputError: {
+    borderColor: "#EF4444",
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 12,
+    fontFamily: "MontserratRegular",
+    marginTop: -10,
+    marginBottom: 10,
   },
   continueButton: {
     backgroundColor: "#000",

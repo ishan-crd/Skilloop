@@ -2,13 +2,13 @@ import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  Dimensions,
-  Image,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    Image,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 const router = useRouter();
 
@@ -16,7 +16,8 @@ const { width } = Dimensions.get("window");
 
 export default function SignIn() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState("+91 ");
+  const [phoneError, setPhoneError] = useState("");
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -31,6 +32,31 @@ export default function SignIn() {
     };
     loadFonts();
   }, []);
+
+  const handlePhoneChange = (text: string) => {
+    // Ensure +91 is always at the beginning
+    if (!text.startsWith("+91 ")) {
+      setPhone("+91 ");
+    } else {
+      setPhone(text);
+    }
+    setPhoneError("");
+  };
+
+  const validatePhone = () => {
+    const phoneNumber = phone.replace("+91 ", "");
+    if (phoneNumber.length < 10) {
+      setPhoneError("Please enter a valid 10-digit phone number");
+      return false;
+    }
+    return true;
+  };
+
+  const handleContinue = () => {
+    if (validatePhone()) {
+      router.push("/onboarding1");
+    }
+  };
 
   if (!fontsLoaded) return null;
 
@@ -47,17 +73,16 @@ export default function SignIn() {
 
       <Text style={styles.label}>Phone Number</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, phoneError ? styles.inputError : null]}
         keyboardType="phone-pad"
-        placeholder="+91"
-        placeholderTextColor="#999"
         value={phone}
-        onChangeText={setPhone}
+        onChangeText={handlePhoneChange}
       />
+      {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
 
       <TouchableOpacity
         style={styles.continueButton}
-        onPress={() => router.push("/onboarding1")}
+        onPress={handleContinue}
       >
         <Text style={styles.continueText}>Continue with Phone</Text>
       </TouchableOpacity>
@@ -115,6 +140,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "MontserratRegular",
     marginBottom: 20,
+  },
+  inputError: {
+    borderColor: "#EF4444",
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 12,
+    fontFamily: "MontserratRegular",
+    marginTop: -15,
+    marginBottom: 15,
   },
   continueButton: {
     backgroundColor: "#F4C3AC",

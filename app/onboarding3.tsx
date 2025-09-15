@@ -3,18 +3,21 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import { useOnboarding } from "../contexts/OnboardingContext";
 
 export default function Onboarding3() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [images, setImages] = useState<(string | null)[]>([null, null, null]);
+  const [images, setImages] = useState<(string | null)[]>([null, null, null, null]);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
   const router = useRouter();
+  const { onboardingData, updateOnboardingData } = useOnboarding();
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -49,18 +52,50 @@ export default function Onboarding3() {
       const updatedImages = [...images];
       updatedImages[index] = selectedImage;
       setImages(updatedImages);
+      
+      // Clear errors when user uploads an image
+      if (errors.images) {
+        setErrors(prev => ({ ...prev, images: '' }));
+      }
+    }
+  };
+
+  const validateImages = () => {
+    const uploadedImages = images.filter(img => img !== null);
+    
+    if (uploadedImages.length < 2) {
+      setErrors({ images: 'Please upload at least 2 images' });
+      return false;
+    }
+    
+    if (uploadedImages.length > 4) {
+      setErrors({ images: 'Maximum 4 images allowed' });
+      return false;
+    }
+    
+    setErrors({});
+    return true;
+  };
+
+  const handleContinue = () => {
+    if (validateImages()) {
+      const uploadedImages = images.filter(img => img !== null) as string[];
+      updateOnboardingData({ profileImages: uploadedImages });
+      router.push("/onboarding4");
     }
   };
 
   if (!fontsLoaded) return null;
 
-  const prompts = ["Your face", "Flex ur skill", "Anything but professional"];
+  const prompts = ["Your face", "Flex ur skill", "Professional work", "Personal touch"];
 
   return (
     <View style={styles.container}>
       {/* Back + Progress */}
       <View style={styles.topBar}>
-        <Text style={styles.backArrow}>←</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.backArrow}>←</Text>
+        </TouchableOpacity>
         <View style={styles.progressBarContainer}>
           {[...Array(7)].map((_, i) => (
             <View
@@ -77,15 +112,18 @@ export default function Onboarding3() {
       {/* Title */}
       <Text style={styles.title}>Profile Images</Text>
       <Text style={styles.subtitle}>
-        Upload three professional photos that represent you best
+        Upload 2-4 professional photos that represent you best
       </Text>
 
       {/* Image Uploads */}
-      <View style={styles.imageRow}>
+      <View style={styles.imageGrid}>
         {images.map((img, idx) => (
           <TouchableOpacity
             key={idx}
-            style={styles.imageBox}
+            style={[
+              styles.imageBox,
+              errors.images && styles.imageBoxError
+            ]}
             onPress={() => pickImage(idx)}
           >
             {img ? (
@@ -96,6 +134,16 @@ export default function Onboarding3() {
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* Error Message */}
+      {errors.images && (
+        <Text style={styles.errorText}>{errors.images}</Text>
+      )}
+
+      {/* Image Count */}
+      <Text style={styles.imageCount}>
+        {images.filter(img => img !== null).length}/4 images uploaded
+      </Text>
 
       {/* Buttons */}
       <View style={styles.buttonRow}>
@@ -109,7 +157,7 @@ export default function Onboarding3() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.continueButton}
-          onPress={() => router.push("/onboarding4")}
+          onPress={handleContinue}
         >
           <Text style={styles.continueText}>Continue</Text>
         </TouchableOpacity>
@@ -133,6 +181,7 @@ const styles = StyleSheet.create({
   backArrow: {
     fontSize: 24,
     marginRight: 10,
+    padding: 8,
   },
   progressBarContainer: {
     flexDirection: "row",
@@ -161,13 +210,14 @@ const styles = StyleSheet.create({
     color: "#555",
     marginBottom: 30,
   },
-  imageRow: {
+  imageGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 30,
+    marginBottom: 20,
   },
   imageBox: {
-    width: 90,
+    width: "48%",
     height: 110,
     borderWidth: 1,
     borderStyle: "dashed",
@@ -176,6 +226,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 6,
+    marginBottom: 10,
+  },
+  imageBoxError: {
+    borderColor: "#ff4444",
+    borderStyle: "solid",
   },
   imageText: {
     textAlign: "center",
@@ -213,5 +268,19 @@ const styles = StyleSheet.create({
     fontFamily: "MontserratSemiBold",
     fontSize: 14,
     color: "#fff",
+  },
+  errorText: {
+    color: "#ff4444",
+    fontSize: 14,
+    fontFamily: "MontserratRegular",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  imageCount: {
+    color: "#666",
+    fontSize: 14,
+    fontFamily: "MontserratRegular",
+    textAlign: "center",
+    marginBottom: 20,
   },
 });

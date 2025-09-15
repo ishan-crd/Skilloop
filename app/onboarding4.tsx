@@ -2,12 +2,12 @@ import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 const DEFAULT_SKILLS = [
@@ -68,6 +68,10 @@ export default function Onboarding4() {
   const [search, setSearch] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
   const [bio, setBio] = useState("");
+  const [errors, setErrors] = useState({
+    skills: "",
+    bio: "",
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -87,6 +91,40 @@ export default function Onboarding4() {
   const addSkill = (skill: string) => {
     if (!skills.includes(skill)) {
       setSkills([...skills, skill]);
+      if (errors.skills) {
+        setErrors(prev => ({ ...prev, skills: "" }));
+      }
+    }
+  };
+
+  const removeSkill = (skill: string) => {
+    setSkills(skills.filter(s => s !== skill));
+  };
+
+  const validateForm = () => {
+    const newErrors = {
+      skills: "",
+      bio: "",
+    };
+
+    if (skills.length === 0) {
+      newErrors.skills = "Please select at least one skill";
+    }
+
+    const wordCount = bio.trim().split(/\s+/).filter(word => word.length > 0).length;
+    if (!bio.trim()) {
+      newErrors.bio = "Bio is required";
+    } else if (wordCount < 10) {
+      newErrors.bio = "Bio must be at least 10 words";
+    }
+
+    setErrors(newErrors);
+    return !Object.values(newErrors).some(error => error !== "");
+  };
+
+  const handleContinue = () => {
+    if (validateForm()) {
+      router.push("/onboarding5");
     }
   };
 
@@ -101,7 +139,9 @@ export default function Onboarding4() {
     >
       {/* Top bar */}
       <View style={styles.topBar}>
-        <Text style={styles.backArrow}>←</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.backArrow}>←</Text>
+        </TouchableOpacity>
         <View style={styles.progressBarContainer}>
           {[...Array(7)].map((_, i) => (
             <View
@@ -129,6 +169,26 @@ export default function Onboarding4() {
         onChangeText={setSearch}
       />
 
+      {/* Selected Skills */}
+      {skills.length > 0 && (
+        <View style={styles.selectedSkillsContainer}>
+          <Text style={styles.selectedSkillsTitle}>Selected Skills:</Text>
+          <View style={styles.selectedSkills}>
+            {skills.map((skill, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.selectedSkillTag}
+                onPress={() => removeSkill(skill)}
+              >
+                <Text style={styles.selectedSkillText}>
+                  {getSkillEmoji(skill)} {skill} ✕
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
       {/* Default skill tags */}
       <View style={styles.skillTags}>
         {filteredSkills.slice(0, 8).map((skill, i) => (
@@ -146,22 +206,29 @@ export default function Onboarding4() {
           </TouchableOpacity>
         ))}
       </View>
+      {errors.skills ? <Text style={styles.errorText}>{errors.skills}</Text> : null}
 
       {/* Bio input */}
-      <Text style={[styles.label, { marginTop: 20 }]}>Add short bio</Text>
+      <Text style={[styles.label, { marginTop: 20 }]}>Add short bio (minimum 10 words)</Text>
       <TextInput
         multiline
         placeholder="Type here..."
         placeholderTextColor="#aaa"
         value={bio}
-        onChangeText={setBio}
-        style={styles.bioInput}
+        onChangeText={(text) => {
+          setBio(text);
+          if (errors.bio) {
+            setErrors(prev => ({ ...prev, bio: "" }));
+          }
+        }}
+        style={[styles.bioInput, errors.bio ? styles.inputError : null]}
       />
+      {errors.bio ? <Text style={styles.errorText}>{errors.bio}</Text> : null}
 
       {/* Continue */}
       <TouchableOpacity
         style={styles.continueButton}
-        onPress={() => router.push("/onboarding5")}
+        onPress={handleContinue}
       >
         <Text style={styles.continueText}>Continue</Text>
       </TouchableOpacity>
@@ -194,6 +261,7 @@ const styles = StyleSheet.create({
   backArrow: {
     fontSize: 24,
     marginRight: 10,
+    padding: 8,
   },
   progressBarContainer: {
     flexDirection: "row",
@@ -279,5 +347,40 @@ const styles = StyleSheet.create({
     fontFamily: "MontserratSemiBold",
     fontSize: 16,
     color: "#fff",
+  },
+  selectedSkillsContainer: {
+    marginBottom: 16,
+  },
+  selectedSkillsTitle: {
+    fontSize: 14,
+    fontFamily: "MontserratBold",
+    marginBottom: 8,
+    color: "#000",
+  },
+  selectedSkills: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  selectedSkillTag: {
+    backgroundColor: "#3B82F6",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+  },
+  selectedSkillText: {
+    fontFamily: "MontserratSemiBold",
+    fontSize: 12,
+    color: "#fff",
+  },
+  inputError: {
+    borderColor: "#EF4444",
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 12,
+    fontFamily: "MontserratRegular",
+    marginTop: -10,
+    marginBottom: 10,
   },
 });
