@@ -1,6 +1,7 @@
 import * as Font from 'expo-font';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
+import CustomBottomNavbar from '../../components/CustomBottomNavbar';
 import CustomizeCardModal from '../../components/CustomizeCardModal';
 import EditCardModal from '../../components/EditCardModal';
 import { useAuth } from '../../contexts/AuthContext';
@@ -224,6 +225,7 @@ export default function ProfileScreen() {
           currentUserInfo={userInfo}
         />
       </ScrollView>
+      <CustomBottomNavbar />
     </SafeAreaView>
   );
 }

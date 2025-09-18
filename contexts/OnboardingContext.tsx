@@ -41,6 +41,17 @@ interface OnboardingData {
     imageUri: string;
     url: string;
   }>;
+  
+  // Work Experience (onboarding9)
+  workExperiences: Array<{
+    id: string;
+    company: string;
+    position: string;
+    startDate: string;
+    endDate: string;
+    isCurrent: boolean;
+    logo?: string;
+  }>;
 }
 
 interface OnboardingContextType {
@@ -87,6 +98,7 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
     },
     role: '',
     certificates: [],
+    workExperiences: [],
   });
 
   const updateOnboardingData = (data: Partial<OnboardingData>) => {
@@ -117,6 +129,7 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
       },
       role: '',
       certificates: [],
+      workExperiences: [],
     });
   };
 

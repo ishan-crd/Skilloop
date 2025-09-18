@@ -14,7 +14,7 @@ import { useOnboarding } from "../contexts/OnboardingContext";
 
 export default function Onboarding3() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [images, setImages] = useState<(string | null)[]>([null, null, null, null]);
+  const [images, setImages] = useState<(string | null)[]>([null, null, null]);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const router = useRouter();
   const { onboardingData, updateOnboardingData } = useOnboarding();
@@ -63,13 +63,8 @@ export default function Onboarding3() {
   const validateImages = () => {
     const uploadedImages = images.filter(img => img !== null);
     
-    if (uploadedImages.length < 2) {
-      setErrors({ images: 'Please upload at least 2 images' });
-      return false;
-    }
-    
-    if (uploadedImages.length > 4) {
-      setErrors({ images: 'Maximum 4 images allowed' });
+    if (uploadedImages.length !== 3) {
+      setErrors({ images: 'Please upload exactly 3 images' });
       return false;
     }
     
@@ -87,7 +82,7 @@ export default function Onboarding3() {
 
   if (!fontsLoaded) return null;
 
-  const prompts = ["Your face", "Flex ur skill", "Professional work", "Personal touch"];
+  const prompts = ["Your face", "Flex ur skill", "Professional work"];
 
   return (
     <View style={styles.container}>
@@ -112,7 +107,7 @@ export default function Onboarding3() {
       {/* Title */}
       <Text style={styles.title}>Profile Images</Text>
       <Text style={styles.subtitle}>
-        Upload 2-4 professional photos that represent you best
+        Upload exactly 3 professional photos that represent you best
       </Text>
 
       {/* Image Uploads */}
@@ -142,7 +137,7 @@ export default function Onboarding3() {
 
       {/* Image Count */}
       <Text style={styles.imageCount}>
-        {images.filter(img => img !== null).length}/4 images uploaded
+        {images.filter(img => img !== null).length}/3 images uploaded
       </Text>
 
       {/* Buttons */}

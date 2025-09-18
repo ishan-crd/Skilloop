@@ -1,6 +1,7 @@
 import * as Font from 'expo-font';
 import React, { useEffect, useState } from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CustomBottomNavbar from '../../components/CustomBottomNavbar';
 import { useAuth } from '../../contexts/AuthContext';
 import { matchService } from '../../services/supabase';
 
@@ -113,6 +114,7 @@ export default function MessagesScreen() {
           ))
         )}
       </ScrollView>
+      <CustomBottomNavbar />
     </SafeAreaView>
   );
 }

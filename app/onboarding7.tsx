@@ -144,7 +144,7 @@ export default function Onboarding7() {
 
   const handleContinue = () => {
     updateOnboardingData({ certificates });
-    router.push("/onboarding8");
+    router.push("/onboarding9");
   };
 
   const handleSkip = () => {

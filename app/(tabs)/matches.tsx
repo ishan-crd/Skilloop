@@ -1,9 +1,49 @@
 import * as Font from 'expo-font';
 import React, { useEffect, useState } from 'react';
 import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CustomBottomNavbar from '../../components/CustomBottomNavbar';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMatches } from '../../contexts/MatchesContext';
 import { matchRequestService, matchService } from '../../services/supabase';
+
+// Sample matches data to display
+const sampleMatches = [
+  {
+    id: '1',
+    name: 'Sarah Patel',
+    role: 'Startup 1 founder',
+    profileImage: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
+    website: 'https://sarahpatel.com',
+    socialProfiles: {
+      linkedin: 'https://linkedin.com/in/sarahpatel',
+      instagram: 'https://instagram.com/sarahpatel',
+      twitter: 'https://twitter.com/sarahpatel'
+    }
+  },
+  {
+    id: '2',
+    name: 'Sam Mathews',
+    role: 'Founder@AngelFundCorp',
+    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+    website: 'https://sammathews.com',
+    socialProfiles: {
+      linkedin: 'https://linkedin.com/in/sammathews',
+      instagram: 'https://instagram.com/sammathews',
+      twitter: 'https://twitter.com/sammathews'
+    }
+  },
+  {
+    id: '3',
+    name: 'Rajnish',
+    role: 'App developer',
+    profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+    website: 'https://rajnish.dev',
+    socialProfiles: {
+      linkedin: 'https://linkedin.com/in/rajnish',
+      instagram: 'https://instagram.com/rajnish'
+    }
+  }
+];
 
 export default function MatchesScreen() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -130,65 +170,42 @@ export default function MatchesScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Match Requests Section */}
-      {matchRequests.length > 0 && (
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Match Requests</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.requestsScroll}>
-            {matchRequests.map((request) => (
-              <View key={request.id} style={styles.requestCard}>
-                <Image 
-                  source={{ uri: request.requester_profile_images[0] || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face' }} 
-                  style={styles.requestImage} 
-                />
-                <Text style={styles.requestName}>{request.requester_name}</Text>
-                <Text style={styles.requestRole}>{request.requester_job_title}</Text>
-                <View style={styles.requestButtons}>
-                  <TouchableOpacity 
-                    style={styles.acceptButton}
-                    onPress={() => handleAcceptMatch(request.id, request.requester_name)}
-                  >
-                    <Text style={styles.acceptButtonText}>✓</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.rejectButton}
-                    onPress={() => handleRejectMatch(request.id)}
-                  >
-                    <Text style={styles.rejectButtonText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      )}
-
-      {/* Actual Matches Section */}
+      {/* Matches List */}
       <ScrollView style={styles.matchesList} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>Your Matches</Text>
-        {actualMatches.length === 0 ? (
-          <View style={styles.noMatchesContainer}>
-            <Text style={styles.noMatchesText}>No matches yet!</Text>
-            <Text style={styles.noMatchesSubtext}>Start swiping to find your perfect connections</Text>
-          </View>
-        ) : (
-          actualMatches.map((match) => (
-            <TouchableOpacity key={match.match_id} style={styles.matchCard}>
-              <Image source={{ uri: match.other_user_profile_images[0] || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face' }} style={styles.profileImage} />
-              <View style={styles.matchInfo}>
-                <Text style={styles.matchName}>{match.other_user_name}</Text>
-                <Text style={styles.matchRole}>{match.other_user_job_title}</Text>
-                <Text style={styles.lastMessageTime}>
-                  Last message: {new Date(match.last_message_at).toLocaleDateString()}
-                </Text>
-              </View>
-              <TouchableOpacity style={styles.chatButton}>
-                <Text style={styles.chatIcon}>💬</Text>
+        {sampleMatches.map((match) => (
+          <View key={match.id} style={styles.matchCard}>
+            <Image source={{ uri: match.profileImage }} style={styles.profileImage} />
+            <View style={styles.matchInfo}>
+              <Text style={styles.matchName}>{match.name}</Text>
+              <Text style={styles.matchRole}>{match.role}</Text>
+              <TouchableOpacity style={styles.websiteLink}>
+                <Text style={styles.websiteText}>Website/Portfolio</Text>
               </TouchableOpacity>
+              <View style={styles.socialIcons}>
+                {match.socialProfiles.linkedin && (
+                  <TouchableOpacity style={[styles.socialIcon, styles.linkedinIcon]}>
+                    <Text style={[styles.socialIconText, styles.linkedinText]}>in</Text>
+                  </TouchableOpacity>
+                )}
+                {match.socialProfiles.instagram && (
+                  <TouchableOpacity style={styles.socialIcon}>
+                    <Text style={styles.socialIconText}>📷</Text>
+                  </TouchableOpacity>
+                )}
+                {match.socialProfiles.twitter && (
+                  <TouchableOpacity style={styles.socialIcon}>
+                    <Text style={styles.socialIconText}>X</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+            <TouchableOpacity style={styles.likeButton}>
+              <Text style={styles.likeIcon}>👍</Text>
             </TouchableOpacity>
-          ))
-        )}
+          </View>
+        ))}
       </ScrollView>
+      <CustomBottomNavbar />
     </SafeAreaView>
   );
 }
@@ -228,21 +245,31 @@ const styles = StyleSheet.create({
   },
   matchesList: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   matchCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
+    marginHorizontal: 20,
+    borderWidth: 1,
+    borderColor: '#000000',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   profileImage: {
     width: 60,
     height: 60,
     borderRadius: 30,
     marginRight: 16,
+    borderWidth: 1,
+    borderColor: '#000000',
   },
   matchInfo: {
     flex: 1,
@@ -256,14 +283,16 @@ const styles = StyleSheet.create({
   matchRole: {
     fontSize: 14,
     fontFamily: 'MontserratRegular',
-    color: '#6B7280',
+    color: '#000',
     marginBottom: 8,
   },
   websiteLink: {
+    marginBottom: 8,
+  },
+  websiteText: {
     fontSize: 14,
     fontFamily: 'MontserratSemiBold',
     color: '#3B82F6',
-    marginBottom: 8,
   },
   socialIcons: {
     flexDirection: 'row',
@@ -282,13 +311,21 @@ const styles = StyleSheet.create({
     fontFamily: 'MontserratBold',
     color: '#000',
   },
+  linkedinIcon: {
+    backgroundColor: '#0077B5',
+  },
+  linkedinText: {
+    color: '#FFFFFF',
+  },
   likeButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FCD34D',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#000000',
   },
   likeIcon: {
     fontSize: 18,

@@ -2,7 +2,7 @@
 -- Run this in Supabase SQL Editor
 
 -- First, delete existing test users to avoid duplicates
-DELETE FROM users WHERE email LIKE '%@example.com' OR email LIKE '%@skilloop.local';
+DELETE FROM users WHERE email LIKE   OR email LIKE '%@skilloop.local';
 
 -- Insert test users with correct column order
 INSERT INTO users (
@@ -20,7 +20,13 @@ INSERT INTO users (
     'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=500&fit=crop&crop=face',
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=500&fit=crop&crop=face'
   ],
-  ARRAY['Figma', 'Adobe XD', 'Sketch', 'Photoshop', 'Illustrator', 'Prototyping'],
+  
+),
+(
+  'sam.mathews@example.com',
+  '+1 555 123 4567',
+  'Sam Mathews',
+  32,ARRAY['Figma', 'Adobe XD', 'Sketch', 'Photoshop', 'Illustrator', 'Prototyping'],
   'Creative UI/UX designer passionate about creating beautiful, user-centered experiences.',
   'UI/UX Designer',
   'Design Studio',
@@ -29,12 +35,6 @@ INSERT INTO users (
   'Freelancer',
   TRUE,
   TRUE
-),
-(
-  'sam.mathews@example.com',
-  '+1 555 123 4567',
-  'Sam Mathews',
-  32,
   'Male',
   'San Francisco',
   ARRAY[

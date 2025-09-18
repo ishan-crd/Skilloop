@@ -95,7 +95,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
           />
         </View>
 
-        {/* Basic Info Card */}
+        {/* Basic Info Card - Black bordered box with shadow */}
         <View style={styles.basicInfoCard}>
           <View style={styles.infoItem}>
             <Text style={styles.infoIcon}>📅</Text>
@@ -111,33 +111,34 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
           </View>
         </View>
 
-        {/* Role Card */}
-        <View style={styles.roleCard}>
-          <Text style={styles.roleTitle}>I am a {user.role || 'Professional'}</Text>
-          <Text style={styles.roleDescription}>
-            {(user.role || '') === 'Freelancer' && 'I provide services or work on projects'}
-            {(user.role || '') === 'Founder' && 'I\'m building a startup or business'}
-            {(user.role || '') === 'Student' && 'I\'m studying or learning new skills'}
-          </Text>
-        </View>
+        {/* Professional Info Card - Directly below basic info */}
+        <View style={styles.professionalCard}>
+          <Text style={styles.jobTitle}>{user.jobTitle || 'App developer'}</Text>
+          <Text style={styles.company}>{user.company || 'Apple inc'}</Text>
+          
+          <TouchableOpacity style={styles.websiteLink}>
+            <Text style={styles.websiteText}>Website/Portfolio</Text>
+          </TouchableOpacity>
 
-        {/* Bio Card */}
-        {(user.bio && user.bio.trim()) && (
-          <View style={styles.bioCard}>
-            <Text style={styles.bioTitle}>About Me</Text>
-            <Text style={styles.bioText}>{user.bio}</Text>
-          </View>
-        )}
-
-        {/* Skills Card */}
-        <View style={styles.skillsCard}>
-          <Text style={styles.skillsTitle}>Skills & Expertise</Text>
-          <View style={styles.skillsContainer}>
-            {(user.skills || []).map((skill, index) => (
-              <View key={index} style={styles.skillTag}>
-                <Text style={styles.skillText}>{skill}</Text>
-              </View>
-            ))}
+          <View style={styles.socialIconsContainer}>
+            <TouchableOpacity style={[styles.socialIcon, styles.linkedinIcon]}>
+              <Text style={[styles.socialIconText, styles.linkedinText]}>in</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.socialIcon}>
+              <Text style={styles.socialIconText}>📷</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.socialIcon}>
+              <Text style={styles.socialIconText}>Up</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.socialIcon}>
+              <Text style={styles.socialIconText}>X</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.socialIcon}>
+              <Text style={styles.socialIconText}>🎨</Text>
+            </TouchableOpacity>
+            <View style={styles.briefcaseIcon}>
+              <Text style={styles.briefcaseText}>💼</Text>
+            </View>
           </View>
         </View>
 
@@ -150,42 +151,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
           />
         </View>
 
-        {/* Professional Info Card */}
-        <View style={styles.professionalCard}>
-          <Text style={styles.jobTitle}>{user.jobTitle || 'Professional'}</Text>
-          <Text style={styles.company}>@{user.company || 'Company'}</Text>
-          
-          {(user.website && user.website.trim()) && (
-            <TouchableOpacity style={styles.websiteLink}>
-              <Text style={styles.websiteText}>Website/Portfolio</Text>
-            </TouchableOpacity>
-          )}
-
-          <View style={styles.socialIconsContainer}>
-            {Object.entries(user.socialProfiles || {}).map(([platform, url]) => (
-              url && url.trim() && (
-                <TouchableOpacity 
-                  key={platform} 
-                  style={[
-                    styles.socialIcon,
-                    platform === 'linkedin' && styles.linkedinIcon
-                  ]}
-                >
-                  <Text style={[
-                    styles.socialIconText,
-                    platform === 'linkedin' && styles.linkedinText
-                  ]}>
-                    {socialIcons[platform as keyof typeof socialIcons] || '🔗'}
-                  </Text>
-                </TouchableOpacity>
-              )
-            ))}
-            <View style={styles.briefcaseIcon}>
-              <Text style={styles.briefcaseText}>💼</Text>
-            </View>
-          </View>
-        </View>
-
         {/* Third Profile Picture */}
         <View style={styles.profileImageContainer}>
           <Image
@@ -196,14 +161,16 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
         </View>
       </ScrollView>
 
-      {/* Action Buttons - Fixed at bottom */}
-      <View style={styles.actionButtonsContainer}>
-        <TouchableOpacity style={styles.crossButton} onPress={onCross}>
-          <Text style={styles.crossIcon}>✕</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.matchButton} onPress={onMatch}>
-          <Text style={styles.matchIcon}>🤝</Text>
-        </TouchableOpacity>
+      {/* Purple Background with Action Buttons */}
+      <View style={styles.bottomSection}>
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity style={styles.crossButton} onPress={onCross}>
+            <Text style={styles.crossIcon}>✕</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.matchButton} onPress={onMatch}>
+            <Text style={styles.matchIcon}>🤝</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </Animated.View>
   );
@@ -229,7 +196,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 10,
-    paddingBottom: 150, // Space for action buttons above navbar
+    paddingBottom: 120, // Space for floating action buttons
   },
   backButton: {
     padding: 8,
@@ -292,14 +259,25 @@ const styles = StyleSheet.create({
     width: '95%',
     height: 300,
     borderRadius: 25,
+    borderWidth: 2,
+    borderColor: '#000000',
   },
   basicInfoCard: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 50,
+    padding: 12,
     marginBottom: 16,
     flexDirection: 'row',
     justifyContent: 'space-around',
+    borderWidth: 2,
+    borderColor: '#000000',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    alignSelf: 'center',
+    width: '95%',
   },
   roleCard: {
     backgroundColor: '#F0F9FF',
@@ -380,14 +358,23 @@ const styles = StyleSheet.create({
     color: '#374151',
   },
   professionalCard: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 50,
     padding: 16,
     marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#000000',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    alignSelf: 'center',
+    width: '95%',
   },
   jobTitle: {
     fontSize: 18,
-    fontFamily: 'MontserratBold',
+    fontFamily: 'MontserratRegular',
     color: '#000',
     marginBottom: 4,
   },
@@ -441,16 +428,21 @@ const styles = StyleSheet.create({
   briefcaseText: {
     fontSize: 16,
   },
-  actionButtonsContainer: {
+  bottomSection: {
+    backgroundColor: 'transparent',
+    paddingTop: 20,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
     position: 'absolute',
-    bottom: 40,
+    bottom: 0,
     left: 0,
     right: 0,
+    zIndex: 1,
+  },
+  actionButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 40,
-    paddingBottom: 20,
-    paddingTop: 10,
+    paddingHorizontal: 20,
   },
   crossButton: {
     width: 60,
@@ -459,6 +451,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#000000',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -468,14 +462,17 @@ const styles = StyleSheet.create({
   crossIcon: {
     fontSize: 24,
     color: '#000',
+    fontWeight: 'bold',
   },
   matchButton: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#FCD34D',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#000000',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

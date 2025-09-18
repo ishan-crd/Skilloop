@@ -84,6 +84,7 @@ export default function Onboarding8() {
         profile_images: onboardingData.profileImages,
         social_profiles: onboardingData.socialProfiles,
         certificates: onboardingData.certificates || [],
+        work_experiences: onboardingData.workExperiences || [],
         onboarding_completed: true,
         is_active: true,
       };
