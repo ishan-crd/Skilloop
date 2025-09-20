@@ -1,4 +1,5 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { authService } from '../services/authService';
 import { supabase, User } from '../services/supabase';
 
 interface AuthContextType {
@@ -89,9 +90,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signOut = async () => {
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      await AsyncStorage.removeItem('currentUser');
-      setUser(null);
+      const result = await authService.signOut();
+      if (result.success) {
+        setUser(null);
+      }
     } catch (error) {
       console.log('Error signing out:', error);
     }

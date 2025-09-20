@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase OTP Test - Simple</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .test-numbers {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Firebase OTP Test - Simple</h2>
+        
+        <div class="info">
+            <strong>Instructions:</strong><br>
+            1. First, add test phone numbers in Firebase Console<br>
+            2. Go to Authentication → Sign-in method → Phone → Test phone numbers<br>
+            3. Add: +1 650-555-3434 with OTP: 123456<br>
+            4. Use the test numbers below
+        </div>
+        
+        <div class="test-numbers">
+            <strong>Test Phone Numbers:</strong><br>
+            • +1 650-555-3434 (OTP: 123456)<br>
+            • +1 650-555-3435 (OTP: 123456)<br>
+            • +1 650-555-3436 (OTP: 123456)
+        </div>
+        
+        <div id="phone-section">
+            <input type="tel" id="phone" placeholder="Enter test phone number (+1 650-555-3434)" value="+1 650-555-3434" />
+            <button onclick="sendOTP()">Send OTP</button>
+        </div>
+        
+        <div id="otp-section" style="display: none;">
+            <input type="text" id="otp" placeholder="Enter OTP (123456)" value="123456" />
+            <button onclick="verifyOTP()">Verify OTP</button>
+            <button onclick="resendOTP()">Resend OTP</button>
+        </div>
+        
+        <div id="message"></div>
+        
+        <!-- reCAPTCHA container -->
+        <div id="recaptcha-container"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithPhoneNumber, RecaptchaVerifier } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCX1FrTfyhnWFl1p4Iy_Xhj8yWX7qAzW1s",
+            authDomain: "skilloop-a368d.firebaseapp.com",
+            projectId: "skilloop-a368d",
+            storageBucket: "skilloop-a368d.firebasestorage.app",
+            messagingSenderId: "815594107067",
+            appId: "1:815594107067:web:abd56a20add75447b3399e",
+            measurementId: "G-TR6SQKQM42"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        console.log('Firebase initialized:', app.name);
+
+        // Create reCAPTCHA verifier
+        let recaptchaVerifier;
+        let confirmationResult;
+
+        // Initialize reCAPTCHA when page loads
+        window.addEventListener('load', () => {
+            try {
+                recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                    size: 'invisible',
+                    callback: (response) => {
+                        console.log('reCAPTCHA solved:', response);
+                    },
+                    'expired-callback': () => {
+                        console.log('reCAPTCHA expired');
+                        showMessage('reCAPTCHA expired. Please try again.', 'error');
+                    }
+                });
+                console.log('reCAPTCHA verifier created');
+            } catch (error) {
+                console.error('Error creating reCAPTCHA verifier:', error);
+                showMessage('Error setting up reCAPTCHA. Please refresh the page.', 'error');
+            }
+        });
+
+        window.sendOTP = async function() {
+            const phoneNumber = document.getElementById('phone').value;
+            
+            if (!phoneNumber) {
+                showMessage('Please enter a phone number', 'error');
+                return;
+            }
+
+            try {
+                console.log('Sending OTP to:', phoneNumber);
+                showMessage('Sending OTP...', 'info');
+                
+                // Send OTP using Firebase
+                confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
+                
+                showMessage('OTP sent successfully! Check your phone for the SMS.', 'success');
+                document.getElementById('phone-section').style.display = 'none';
+                document.getElementById('otp-section').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error sending OTP:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                
+                let errorMsg = error.message;
+                if (error.code === 'auth/internal-error') {
+                    errorMsg = 'Firebase internal error. Make sure you have added test phone numbers in Firebase Console.';
+                } else if (error.code === 'auth/invalid-phone-number') {
+                    errorMsg = 'Invalid phone number format. Use +1234567890 format.';
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMsg = 'Too many requests. Please try again later.';
+                } else if (error.code === 'auth/quota-exceeded') {
+                    errorMsg = 'SMS quota exceeded. Please try again later.';
+                } else if (error.code === 'auth/missing-recaptcha-token') {
+                    errorMsg = 'reCAPTCHA verification required. Please refresh and try again.';
+                }
+                
+                showMessage(`Error: ${errorMsg}`, 'error');
+            }
+        };
+
+        window.verifyOTP = async function() {
+            const otp = document.getElementById('otp').value;
+            
+            if (!otp) {
+                showMessage('Please enter OTP', 'error');
+                return;
+            }
+
+            try {
+                console.log('Verifying OTP:', otp);
+                showMessage('Verifying OTP...', 'info');
+                
+                const result = await confirmationResult.confirm(otp);
+                const user = result.user;
+                
+                showMessage(`Success! User ID: ${user.uid}, Phone: ${user.phoneNumber}`, 'success');
+                
+            } catch (error) {
+                console.error('Error verifying OTP:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                
+                let errorMsg = error.message;
+                if (error.code === 'auth/invalid-verification-code') {
+                    errorMsg = 'Invalid OTP code. Please check and try again.';
+                } else if (error.code === 'auth/code-expired') {
+                    errorMsg = 'OTP code has expired. Please request a new one.';
+                } else if (error.code === 'auth/invalid-verification-id') {
+                    errorMsg = 'Invalid verification session. Please request OTP again.';
+                }
+                
+                showMessage(`Error: ${errorMsg}`, 'error');
+            }
+        };
+
+        window.resendOTP = function() {
+            document.getElementById('otp-section').style.display = 'none';
+            document.getElementById('phone-section').style.display = 'block';
+            document.getElementById('phone').value = '+1 650-555-3434';
+            document.getElementById('otp').value = '123456';
+            showMessage('', '');
+        };
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+        }
+    </script>
+</body>
+</html>

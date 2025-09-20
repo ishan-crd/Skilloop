@@ -38,6 +38,24 @@ export default function Onboarding8() {
     try {
       const tempEmail = `user${Date.now()}@skilloop.local`;
 
+      console.log('Creating profile with data:', {
+        user_email: tempEmail,
+        user_name: onboardingData.name,
+        user_age: parseInt(onboardingData.age) || 0,
+        user_gender: onboardingData.gender,
+        user_location: onboardingData.location,
+        user_job_title: onboardingData.jobTitle,
+        user_company: onboardingData.company,
+        user_website: onboardingData.website,
+        user_bio: onboardingData.bio,
+        user_role: onboardingData.role,
+        user_skills: onboardingData.skills,
+        user_profile_images: onboardingData.profileImages,
+        user_social_profiles: onboardingData.socialProfiles,
+        user_certificates: onboardingData.certificates || [],
+        user_work_experiences: onboardingData.workExperiences || [],
+      });
+
       const { data: userId, error: profileError } = await supabase.rpc('create_user_profile', {
         user_email: tempEmail,
         user_name: onboardingData.name,
@@ -52,11 +70,14 @@ export default function Onboarding8() {
         user_skills: onboardingData.skills,
         user_profile_images: onboardingData.profileImages,
         user_social_profiles: onboardingData.socialProfiles,
+        user_certificates: onboardingData.certificates || [],
+        user_work_experiences: onboardingData.workExperiences || [],
       });
 
       if (profileError) {
         console.error('Profile error:', profileError);
-        Alert.alert('Error', 'Failed to create profile. Please try again.');
+        console.error('Profile error details:', JSON.stringify(profileError, null, 2));
+        Alert.alert('Error', `Failed to create profile: ${profileError.message || 'Unknown error'}`);
         return;
       }
 

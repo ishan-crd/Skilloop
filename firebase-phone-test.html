@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Phone Auth Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .step {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .step h3 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus {
+            border-color: #2196f3;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .message {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .test-numbers {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border: 1px solid #ffeaa7;
+        }
+        .test-numbers h4 {
+            margin: 0 0 10px 0;
+            color: #856404;
+        }
+        .test-numbers code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        #recaptcha-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔥 Firebase Phone Authentication Test</h2>
+        
+        <div class="step">
+            <h3>📋 Prerequisites</h3>
+            <p>1. Enable Phone Authentication in Firebase Console</p>
+            <p>2. Add test phone numbers in Firebase Console</p>
+            <p>3. Use the test numbers below</p>
+        </div>
+        
+        <div class="test-numbers">
+            <h4>🧪 Test Phone Numbers</h4>
+            <p><code>+1 650-555-3434</code> → OTP: <code>123456</code></p>
+            <p><code>+1 650-555-3435</code> → OTP: <code>123456</code></p>
+            <p><code>+1 650-555-3436</code> → OTP: <code>123456</code></p>
+        </div>
+        
+        <div id="phone-section">
+            <input type="tel" id="phone" placeholder="Enter test phone number (+1 650-555-3434)" value="+1 650-555-3434" />
+            <button onclick="sendOTP()" id="sendBtn">📱 Send OTP</button>
+        </div>
+        
+        <div id="otp-section" class="hidden">
+            <input type="text" id="otp" placeholder="Enter OTP (123456)" value="123456" />
+            <button onclick="verifyOTP()" id="verifyBtn">✅ Verify OTP</button>
+            <button onclick="resendOTP()" id="resendBtn">🔄 Resend OTP</button>
+        </div>
+        
+        <div id="message"></div>
+        
+        <!-- reCAPTCHA container -->
+        <div id="recaptcha-container"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithPhoneNumber, RecaptchaVerifier } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCX1FrTfyhnWFl1p4Iy_Xhj8yWX7qAzW1s",
+            authDomain: "skilloop-a368d.firebaseapp.com",
+            projectId: "skilloop-a368d",
+            storageBucket: "skilloop-a368d.firebasestorage.app",
+            messagingSenderId: "815594107067",
+            appId: "1:815594107067:web:abd56a20add75447b3399e",
+            measurementId: "G-TR6SQKQM42"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        console.log('🔥 Firebase initialized:', app.name);
+
+        // Global variables
+        let recaptchaVerifier;
+        let confirmationResult;
+
+        // Initialize reCAPTCHA when page loads
+        window.addEventListener('load', async () => {
+            try {
+                showMessage('🔄 Initializing Firebase...', 'info');
+                console.log('🔥 Firebase auth object:', auth);
+                console.log('🔥 Firebase app:', app);
+                
+                // Wait a bit for Firebase to fully initialize
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                    size: 'normal',
+                    callback: (response) => {
+                        console.log('✅ reCAPTCHA solved:', response);
+                        showMessage('✅ reCAPTCHA verified! You can now send OTP.', 'success');
+                    },
+                    'expired-callback': () => {
+                        console.log('❌ reCAPTCHA expired');
+                        showMessage('❌ reCAPTCHA expired. Please refresh the page.', 'error');
+                    }
+                });
+
+                console.log('🔄 Rendering reCAPTCHA...');
+                await recaptchaVerifier.render();
+                console.log('✅ reCAPTCHA rendered successfully');
+                showMessage('✅ Ready! Enter a test phone number and click Send OTP.', 'success');
+                
+            } catch (error) {
+                console.error('❌ Error initializing reCAPTCHA:', error);
+                console.error('❌ Error details:', error);
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+        });
+
+        window.sendOTP = async function() {
+            const phoneNumber = document.getElementById('phone').value.trim();
+            const sendBtn = document.getElementById('sendBtn');
+            
+            if (!phoneNumber) {
+                showMessage('❌ Please enter a phone number', 'error');
+                return;
+            }
+
+            try {
+                sendBtn.disabled = true;
+                sendBtn.textContent = '🔄 Sending...';
+                showMessage('🔄 Sending OTP...', 'info');
+                
+                console.log('📱 Sending OTP to:', phoneNumber);
+                
+                // Send OTP using Firebase
+                confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
+                
+                console.log('✅ OTP sent successfully');
+                showMessage('✅ OTP sent successfully! Check your phone for the SMS.', 'success');
+                
+                // Show OTP section
+                document.getElementById('phone-section').classList.add('hidden');
+                document.getElementById('otp-section').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('❌ Error sending OTP:', error);
+                console.error('❌ Error code:', error.code);
+                console.error('❌ Error message:', error.message);
+                
+                let errorMsg = error.message;
+                if (error.code === 'auth/internal-error') {
+                    errorMsg = '❌ Firebase internal error. Make sure Phone Authentication is enabled in Firebase Console.';
+                } else if (error.code === 'auth/invalid-phone-number') {
+                    errorMsg = '❌ Invalid phone number format. Use +1234567890 format.';
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMsg = '❌ Too many requests. Please try again later.';
+                } else if (error.code === 'auth/quota-exceeded') {
+                    errorMsg = '❌ SMS quota exceeded. Please try again later.';
+                } else if (error.code === 'auth/missing-recaptcha-token') {
+                    errorMsg = '❌ reCAPTCHA verification required. Please refresh and try again.';
+                } else if (error.code === 'auth/invalid-recaptcha-token') {
+                    errorMsg = '❌ reCAPTCHA verification failed. Please refresh and try again.';
+                }
+                
+                showMessage(errorMsg, 'error');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = '📱 Send OTP';
+            }
+        };
+
+        window.verifyOTP = async function() {
+            const otp = document.getElementById('otp').value.trim();
+            const verifyBtn = document.getElementById('verifyBtn');
+            
+            if (!otp) {
+                showMessage('❌ Please enter OTP', 'error');
+                return;
+            }
+
+            try {
+                verifyBtn.disabled = true;
+                verifyBtn.textContent = '🔄 Verifying...';
+                showMessage('🔄 Verifying OTP...', 'info');
+                
+                console.log('🔐 Verifying OTP:', otp);
+                
+                const result = await confirmationResult.confirm(otp);
+                const user = result.user;
+                
+                console.log('✅ OTP verified successfully');
+                console.log('👤 User ID:', user.uid);
+                console.log('📱 Phone:', user.phoneNumber);
+                
+                showMessage(`🎉 Success! User ID: ${user.uid}, Phone: ${user.phoneNumber}`, 'success');
+                
+            } catch (error) {
+                console.error('❌ Error verifying OTP:', error);
+                console.error('❌ Error code:', error.code);
+                console.error('❌ Error message:', error.message);
+                
+                let errorMsg = error.message;
+                if (error.code === 'auth/invalid-verification-code') {
+                    errorMsg = '❌ Invalid OTP code. Please check and try again.';
+                } else if (error.code === 'auth/code-expired') {
+                    errorMsg = '❌ OTP code has expired. Please request a new one.';
+                } else if (error.code === 'auth/invalid-verification-id') {
+                    errorMsg = '❌ Invalid verification session. Please request OTP again.';
+                }
+                
+                showMessage(errorMsg, 'error');
+            } finally {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = '✅ Verify OTP';
+            }
+        };
+
+        window.resendOTP = function() {
+            document.getElementById('otp-section').classList.add('hidden');
+            document.getElementById('phone-section').classList.remove('hidden');
+            document.getElementById('phone').value = '+1 650-555-3434';
+            document.getElementById('otp').value = '123456';
+            showMessage('🔄 Ready to send new OTP', 'info');
+        };
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+        }
+    </script>
+</body>
+</html>

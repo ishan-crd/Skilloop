@@ -2,6 +2,7 @@ import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+    Alert,
     Image,
     ScrollView,
     StyleSheet,
@@ -10,6 +11,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useOnboarding } from "../contexts/OnboardingContext";
 
 const SOCIAL_ICONS = [
   {
@@ -42,9 +44,10 @@ const SOCIAL_ICONS = [
 export default function Onboarding5() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const router = useRouter();
+  const { onboardingData, updateOnboardingData } = useOnboarding();
 
   const [form, setForm] = useState({
-    role: "",
+    jobTitle: "",
     company: "",
     website: "",
     socialProfiles: {} as Record<string, string>,
@@ -64,6 +67,18 @@ export default function Onboarding5() {
     loadFonts();
   }, []);
 
+  // Load existing data from onboarding context
+  useEffect(() => {
+    if (onboardingData.jobTitle || onboardingData.company || onboardingData.website || onboardingData.socialProfiles) {
+      setForm({
+        jobTitle: onboardingData.jobTitle || "",
+        company: onboardingData.company || "",
+        website: onboardingData.website || "",
+        socialProfiles: onboardingData.socialProfiles || {},
+      });
+    }
+  }, [onboardingData]);
+
   if (!fontsLoaded) return null;
 
   const toggleSocial = (key: string) => {
@@ -80,6 +95,28 @@ export default function Onboarding5() {
         [key]: value,
       },
     }));
+  };
+
+  const handleContinue = () => {
+    // Validate required fields
+    if (!form.jobTitle.trim()) {
+      Alert.alert('Error', 'Please enter your job title');
+      return;
+    }
+    if (!form.company.trim()) {
+      Alert.alert('Error', 'Please enter your company or project name');
+      return;
+    }
+
+    // Save to onboarding context
+    updateOnboardingData({
+      jobTitle: form.jobTitle.trim(),
+      company: form.company.trim(),
+      website: form.website.trim(),
+      socialProfiles: form.socialProfiles,
+    });
+
+    router.push("/onboarding7");
   };
 
   return (
@@ -112,16 +149,16 @@ export default function Onboarding5() {
       </Text>
 
       {/* Inputs */}
-      <Text style={styles.label}>Role</Text>
+      <Text style={styles.label}>Job Title *</Text>
       <TextInput
         placeholder="App Developer/Editor"
         placeholderTextColor="#aaa"
         style={styles.input}
-        value={form.role}
-        onChangeText={(val) => setForm({ ...form, role: val })}
+        value={form.jobTitle}
+        onChangeText={(val) => setForm({ ...form, jobTitle: val })}
       />
 
-      <Text style={styles.label}>Current Company / Project</Text>
+      <Text style={styles.label}>Current Company / Project *</Text>
       <TextInput
         placeholder="Currently at [Your Startup Name]"
         placeholderTextColor="#aaa"
@@ -175,7 +212,7 @@ export default function Onboarding5() {
       {/* Continue */}
       <TouchableOpacity
         style={styles.continueButton}
-        onPress={() => router.push("/onboarding7")}
+        onPress={handleContinue}
       >
         <Text style={styles.continueText}>Continue</Text>
       </TouchableOpacity>

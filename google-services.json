@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "815594107067",
+    "project_id": "skilloop-a368d",
+    "storage_bucket": "skilloop-a368d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815594107067:android:44489bbb085d444fb3399e",
+        "android_client_info": {
+          "package_name": "com.skilloop.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDAgTFb2pExegwbPoKIeEkd7iWXc_slfIQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

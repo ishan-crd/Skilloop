@@ -1,8 +1,8 @@
 import * as Font from 'expo-font';
 import React, { useEffect, useState } from 'react';
 import { Alert, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import ProfileCard from '../../components/ProfileCard';
 import CustomBottomNavbar from '../../components/CustomBottomNavbar';
+import ProfileCard from '../../components/ProfileCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMatches } from '../../contexts/MatchesContext';
 import { matchRequestService, supabase, User } from '../../services/supabase';

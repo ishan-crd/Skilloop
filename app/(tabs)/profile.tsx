@@ -149,25 +149,23 @@ export default function ProfileScreen() {
             style={styles.profileImage} 
           />
           <View style={styles.cardInfo}>
-            <Text style={[styles.userName, { color: cardCustomizations.nameColor }]}>{userInfo.name}</Text>
-            <Text style={[styles.userRole, { color: cardCustomizations.roleColor }]}>{userInfo.jobTitle}</Text>
-            {userInfo.website && (
-              <TouchableOpacity style={styles.websiteLink}>
-                <Text style={[styles.websiteText, { color: cardCustomizations.websiteColor }]}>Website/Portfolio</Text>
-              </TouchableOpacity>
-            )}
+            <Text style={[styles.userName, { color: cardCustomizations.nameColor }]}>{userInfo.name || 'Erik Tyler'}</Text>
+            <Text style={[styles.userRole, { color: cardCustomizations.roleColor }]}>{userInfo.jobTitle || 'App developer'}</Text>
+            <TouchableOpacity style={styles.websiteLink}>
+              <Text style={[styles.websiteText, { color: cardCustomizations.websiteColor }]}>Website/Portfolio</Text>
+            </TouchableOpacity>
             <View style={styles.socialIcons}>
-              <View style={[styles.socialIcon, { backgroundColor: cardCustomizations.socialIconBackground }]}>
-                <Text style={[styles.socialIconText, { color: cardCustomizations.socialIconTextColor }]}>in</Text>
+              <View style={[styles.socialIcon, { backgroundColor: '#0077B5' }]}>
+                <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>in</Text>
               </View>
-              <View style={[styles.socialIcon, { backgroundColor: cardCustomizations.socialIconBackground }]}>
-                <Text style={[styles.socialIconText, { color: cardCustomizations.socialIconTextColor }]}>📷</Text>
+              <View style={[styles.socialIcon, { backgroundColor: '#E4405F' }]}>
+                <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>📷</Text>
               </View>
-              <View style={[styles.socialIcon, { backgroundColor: cardCustomizations.socialIconBackground }]}>
-                <Text style={[styles.socialIconText, { color: cardCustomizations.socialIconTextColor }]}>🐙</Text>
+              <View style={[styles.socialIcon, { backgroundColor: '#333333' }]}>
+                <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>🐙</Text>
               </View>
-              <View style={[styles.socialIcon, { backgroundColor: cardCustomizations.socialIconBackground }]}>
-                <Text style={[styles.socialIconText, { color: cardCustomizations.socialIconTextColor }]}>🎨</Text>
+              <View style={[styles.socialIcon, { backgroundColor: '#F24E1E' }]}>
+                <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>🎨</Text>
               </View>
             </View>
           </View>
@@ -199,14 +197,6 @@ export default function ProfileScreen() {
           >
             <Text style={styles.tertiaryButtonText}>Edit your card</Text>
             <Text style={styles.pencilIcon}>✏️</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.logoutButton}
-            onPress={handleLogout}
-          >
-            <Text style={styles.logoutButtonText}>Logout</Text>
-            <Text style={styles.logoutIcon}>🚪</Text>
           </TouchableOpacity>
         </View>
 
@@ -258,7 +248,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 20,
     marginHorizontal: 20,
     marginBottom: 20,
@@ -279,7 +269,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 18,
-    fontFamily: 'MontserratBold',
+    fontFamily: 'MontserratRegular',
     color: '#000',
     marginBottom: 4,
   },
@@ -303,9 +293,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   socialIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     backgroundColor: '#E5E7EB',
     justifyContent: 'center',
     alignItems: 'center',
@@ -353,7 +343,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#000',
+    borderColor: '#E5E7EB',
     flexDirection: 'row',
     justifyContent: 'center',
     marginBottom: 12,
@@ -371,7 +361,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#000',
+    borderColor: '#F3E8FF',
     flexDirection: 'row',
     justifyContent: 'center',
   },
