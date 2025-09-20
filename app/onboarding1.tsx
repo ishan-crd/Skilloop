@@ -28,11 +28,6 @@ const roles = [
     description: "I'm studying or learning new skills",
     emoji: "🎓",
   },
-  {
-    title: "Company",
-    description: "I represent a company or organization",
-    emoji: "🏢",
-  },
 ];
 
 export default function Onboarding1() {

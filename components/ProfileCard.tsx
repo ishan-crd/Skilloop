@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   infoText: {
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: 'MontserratSemiBold',
     color: '#374151',
   },
@@ -373,13 +373,13 @@ const styles = StyleSheet.create({
     width: '95%',
   },
   jobTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontFamily: 'MontserratRegular',
     color: '#000',
     marginBottom: 4,
   },
   company: {
-    fontSize: 16,
+    fontSize: 12,
     fontFamily: 'MontserratRegular',
     color: '#6B7280',
     marginBottom: 12,
