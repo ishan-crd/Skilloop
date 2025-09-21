@@ -82,9 +82,36 @@ export default function Onboarding5() {
   if (!fontsLoaded) return null;
 
   const toggleSocial = (key: string) => {
-    setActiveSocials((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    );
+    setActiveSocials((prev) => {
+      if (prev.includes(key)) {
+        // If deselecting a social that has a link, show warning
+        if (form.socialProfiles[key] && form.socialProfiles[key].trim()) {
+          Alert.alert(
+            "Link will be lost",
+            "Enter a link or close this window by clicking on the logo again",
+            [
+              { text: "Keep Link", style: "cancel" },
+              { 
+                text: "Remove", 
+                style: "destructive",
+                onPress: () => {
+                  // Remove the social and clear its link
+                  const newActiveSocials = prev.filter((k) => k !== key);
+                  const newSocialProfiles = { ...form.socialProfiles };
+                  delete newSocialProfiles[key];
+                  setForm(prev => ({ ...prev, socialProfiles: newSocialProfiles }));
+                  return newActiveSocials;
+                }
+              }
+            ]
+          );
+          return prev; // Don't change the state if user cancels
+        }
+        return prev.filter((k) => k !== key);
+      } else {
+        return [...prev, key];
+      }
+    });
   };
 
   const updateSocialLink = (key: string, value: string) => {
@@ -105,6 +132,14 @@ export default function Onboarding5() {
     }
     if (!form.company.trim()) {
       Alert.alert('Error', 'Please enter your company or project name');
+      return;
+    }
+
+    // Validate social links - check if any selected social has no link
+    const missingLinks = activeSocials.filter(key => !form.socialProfiles[key] || !form.socialProfiles[key].trim());
+    if (missingLinks.length > 0) {
+      const socialNames = missingLinks.map(key => SOCIAL_ICONS.find(s => s.key === key)?.label || key).join(', ');
+      Alert.alert('Missing Links', `Please enter links for: ${socialNames} or deselect them by clicking the logos again`);
       return;
     }
 

@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   icon: {
-    fontSize: 28,
+    fontSize: 22,
     marginBottom: 4,
   },
   label: {

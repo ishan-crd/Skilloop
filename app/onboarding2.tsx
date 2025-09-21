@@ -2,6 +2,9 @@ import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
     StyleSheet,
     Text,
     TextInput,
@@ -91,103 +94,116 @@ export default function Onboarding2() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Back + Progress */}
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backArrow}>←</Text>
-        </TouchableOpacity>
-        <View style={styles.progressBarContainer}>
-          {[...Array(7)].map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.step,
-                i === 0 || i === 1 ? styles.activeStep : styles.inactiveStep,
-              ]}
-            />
-          ))}
-        </View>
-      </View>
-
-      {/* Title */}
-      <Text style={styles.title}>Basic Information</Text>
-      <Text style={styles.subtitle}>Tell us a bit about yourself</Text>
-
-      {/* Inputs */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Full name</Text>
-        <TextInput
-          placeholder="Elon Musk"
-          placeholderTextColor="#ccc"
-          style={[styles.input, errors.name ? styles.inputError : null]}
-          value={form.name}
-          onChangeText={(val) => handleInputChange("name", val)}
-        />
-        {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
-
-        <Text style={styles.label}>Age</Text>
-        <TextInput
-          placeholder="21"
-          placeholderTextColor="#ccc"
-          style={[styles.input, errors.age ? styles.inputError : null]}
-          keyboardType="numeric"
-          value={form.age}
-          onChangeText={(val) => handleInputChange("age", val)}
-        />
-        {errors.age ? <Text style={styles.errorText}>{errors.age}</Text> : null}
-
-        <Text style={styles.label}>Gender</Text>
-        <View style={styles.dropdownContainer}>
-          {["Male", "Female", "Other"].map((genderOption) => (
-            <TouchableOpacity
-              key={genderOption}
-              style={[
-                styles.genderOption,
-                form.gender === genderOption && styles.genderOptionSelected,
-                errors.gender && !form.gender && styles.genderOptionError,
-              ]}
-              onPress={() => handleInputChange("gender", genderOption)}
-            >
-              <Text style={[
-                styles.genderOptionText,
-                form.gender === genderOption && styles.genderOptionTextSelected,
-              ]}>
-                {genderOption}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        {errors.gender ? <Text style={styles.errorText}>{errors.gender}</Text> : null}
-
-        <Text style={styles.label}>Location</Text>
-        <TextInput
-          placeholder="Mars"
-          placeholderTextColor="#ccc"
-          style={[styles.input, errors.location ? styles.inputError : null]}
-          value={form.location}
-          onChangeText={(val) => handleInputChange("location", val)}
-        />
-        {errors.location ? <Text style={styles.errorText}>{errors.location}</Text> : null}
-      </View>
-
-      {/* Continue Button */}
-      <TouchableOpacity
-        style={styles.continueButton}
-        onPress={handleContinue}
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.continueText}>Continue</Text>
-      </TouchableOpacity>
-    </View>
+        {/* Back + Progress */}
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={styles.backArrow}>←</Text>
+          </TouchableOpacity>
+          <View style={styles.progressBarContainer}>
+            {[...Array(7)].map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.step,
+                  i === 0 || i === 1 ? styles.activeStep : styles.inactiveStep,
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Title */}
+        <Text style={styles.title}>Basic Information</Text>
+        <Text style={styles.subtitle}>Tell us a bit about yourself</Text>
+
+        {/* Inputs */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Full name</Text>
+          <TextInput
+            placeholder="Elon Musk"
+            placeholderTextColor="#ccc"
+            style={[styles.input, errors.name ? styles.inputError : null]}
+            value={form.name}
+            onChangeText={(val) => handleInputChange("name", val)}
+          />
+          {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
+
+          <Text style={styles.label}>Age</Text>
+          <TextInput
+            placeholder="21"
+            placeholderTextColor="#ccc"
+            style={[styles.input, errors.age ? styles.inputError : null]}
+            keyboardType="numeric"
+            value={form.age}
+            onChangeText={(val) => handleInputChange("age", val)}
+          />
+          {errors.age ? <Text style={styles.errorText}>{errors.age}</Text> : null}
+
+          <Text style={styles.label}>Gender</Text>
+          <View style={styles.dropdownContainer}>
+            {["Male", "Female", "Other"].map((genderOption) => (
+              <TouchableOpacity
+                key={genderOption}
+                style={[
+                  styles.genderOption,
+                  form.gender === genderOption && styles.genderOptionSelected,
+                  errors.gender && !form.gender && styles.genderOptionError,
+                ]}
+                onPress={() => handleInputChange("gender", genderOption)}
+              >
+                <Text style={[
+                  styles.genderOptionText,
+                  form.gender === genderOption && styles.genderOptionTextSelected,
+                ]}>
+                  {genderOption}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {errors.gender ? <Text style={styles.errorText}>{errors.gender}</Text> : null}
+
+          <Text style={styles.label}>Location</Text>
+          <TextInput
+            placeholder="Mars"
+            placeholderTextColor="#ccc"
+            style={[styles.input, errors.location ? styles.inputError : null]}
+            value={form.location}
+            onChangeText={(val) => handleInputChange("location", val)}
+          />
+          {errors.location ? <Text style={styles.errorText}>{errors.location}</Text> : null}
+        </View>
+
+        {/* Continue Button */}
+        <TouchableOpacity
+          style={styles.continueButton}
+          onPress={handleContinue}
+        >
+          <Text style={styles.continueText}>Continue</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#fff",
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingTop: 60,
     paddingHorizontal: 25,
-    backgroundColor: "#fff",
   },
   topBar: {
     flexDirection: "row",

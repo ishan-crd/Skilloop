@@ -181,9 +181,10 @@ export default function Onboarding9() {
               <View style={[styles.step, styles.activeStep]} />
               <View style={[styles.step, styles.inactiveStep]} />
             </View>
-            <Text style={styles.title}>Work Experience</Text>
           </View>
 
+          {/* Title */}
+          <Text style={styles.title}>Work Experience</Text>
           <Text style={styles.subtitle}>Add your professional experience to highlight your career path.</Text>
 
           {/* Add Experience Form */}
@@ -278,8 +279,10 @@ export default function Onboarding9() {
             <View style={[styles.step, styles.activeStep]} />
             <View style={[styles.step, styles.inactiveStep]} />
           </View>
-          <Text style={styles.title}>Work Experience</Text>
         </View>
+
+        {/* Title */}
+        <Text style={styles.title}>Work Experience</Text>
 
         <Text style={styles.subtitle}>Add your professional experience to highlight your career path.</Text>
 

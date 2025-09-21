@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CustomBottomNavbar from '../../components/CustomBottomNavbar';
 import { useAuth } from '../../contexts/AuthContext';
-import { matchService } from '../../services/supabase';
 
 interface Conversation {
   id: string;
@@ -13,7 +12,39 @@ interface Conversation {
   timestamp?: string;
 }
 
-// No mock data - using real database data only
+// Sample messages matching the UI design
+const sampleConversations: Conversation[] = [
+  {
+    id: '1',
+    name: 'Sarah Patel',
+    lastMessage: 'hey the deadline is 6th march',
+    profileImage: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
+  },
+  {
+    id: '2',
+    name: 'Andrew',
+    lastMessage: "What's the update?",
+    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+  },
+  {
+    id: '3',
+    name: 'Sam Kontas',
+    lastMessage: 'Hey I have one work for you',
+    profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+  },
+  {
+    id: '4',
+    name: 'Ayush Jha',
+    lastMessage: 'Hello',
+    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+  },
+  {
+    id: '5',
+    name: 'Rupali',
+    lastMessage: 'I have some work for you',
+    profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face',
+  },
+];
 
 export default function MessagesScreen() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -35,25 +66,11 @@ export default function MessagesScreen() {
 
   useEffect(() => {
     const loadConversations = async () => {
-      if (!currentUser || !fontsLoaded) return;
+      if (!fontsLoaded) return;
 
       try {
-        // Get user's matches (conversations)
-        const { data: matchesData, error: matchesError } = await matchService.getUserMatches(currentUser.id);
-        if (matchesError) {
-          console.error('Error getting matches:', matchesError);
-          setConversations([]);
-        } else {
-          // Convert matches to conversation format
-          const conversationList: Conversation[] = (matchesData || []).map((match: any) => ({
-            id: match.match_id,
-            name: match.other_user_name,
-            lastMessage: match.last_message || 'No messages yet',
-            profileImage: match.other_user_profile_images?.[0] || 'https://via.placeholder.com/100',
-            timestamp: match.last_message_at,
-          }));
-          setConversations(conversationList);
-        }
+        // Use sample data for now
+        setConversations(sampleConversations);
       } catch (error) {
         console.error('Error loading conversations:', error);
         setConversations([]);
@@ -63,7 +80,7 @@ export default function MessagesScreen() {
     };
 
     loadConversations();
-  }, [currentUser, fontsLoaded]);
+  }, [fontsLoaded]);
 
   if (!fontsLoaded || authLoading || loading) return null;
 
@@ -83,36 +100,23 @@ export default function MessagesScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>Message</Text>
+        <Text style={styles.title}>Message</Text>
+        <View style={styles.messageIconContainer}>
           <Text style={styles.messageIcon}>💬</Text>
         </View>
       </View>
 
-      {/* Filter Section */}
-      <View style={styles.filterSection}>
-        <Text style={styles.filterTitle}>Message</Text>
-        <Text style={styles.chevron}>▼</Text>
-      </View>
-
       {/* Conversations List */}
       <ScrollView style={styles.conversationsList} showsVerticalScrollIndicator={false}>
-        {conversations.length === 0 ? (
-          <View style={styles.noConversationsContainer}>
-            <Text style={styles.noConversationsText}>No conversations yet!</Text>
-            <Text style={styles.noConversationsSubtext}>Start matching with people to begin chatting</Text>
-          </View>
-        ) : (
-          conversations.map((conversation) => (
-            <TouchableOpacity key={conversation.id} style={styles.conversationCard}>
-              <Image source={{ uri: conversation.profileImage }} style={styles.profileImage} />
-              <View style={styles.conversationInfo}>
-                <Text style={styles.conversationName}>{conversation.name}</Text>
-                <Text style={styles.lastMessage}>{conversation.lastMessage}</Text>
-              </View>
-            </TouchableOpacity>
-          ))
-        )}
+        {conversations.map((conversation) => (
+          <TouchableOpacity key={conversation.id} style={styles.conversationCard}>
+            <Image source={{ uri: conversation.profileImage }} style={styles.profileImage} />
+            <View style={styles.conversationInfo}>
+              <Text style={styles.conversationName}>{conversation.name}</Text>
+              <Text style={styles.lastMessage}>{conversation.lastMessage}</Text>
+            </View>
+          </TouchableOpacity>
+        ))}
       </ScrollView>
       <CustomBottomNavbar />
     </SafeAreaView>
@@ -125,22 +129,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 10,
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingBottom: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontFamily: 'MontserratBold',
     color: '#000',
-    marginRight: 8,
+  },
+  messageIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   messageIcon: {
-    fontSize: 20,
+    fontSize: 18,
+    color: '#6B7280',
   },
   filterSection: {
     flexDirection: 'row',
@@ -168,12 +179,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 8,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   profileImage: {
     width: 50,
@@ -193,7 +204,7 @@ const styles = StyleSheet.create({
   lastMessage: {
     fontSize: 14,
     fontFamily: 'MontserratRegular',
-    color: '#000',
+    color: '#6B7280',
   },
   noUserContainer: {
     flex: 1,

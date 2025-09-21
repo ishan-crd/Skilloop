@@ -164,16 +164,20 @@ export default function Onboarding7() {
               <Text style={styles.backIcon}>←</Text>
             </TouchableOpacity>
             <View style={styles.progressBarContainer}>
-              <View style={[styles.step, styles.activeStep]} />
-              <View style={[styles.step, styles.activeStep]} />
-              <View style={[styles.step, styles.activeStep]} />
-              <View style={[styles.step, styles.activeStep]} />
-              <View style={[styles.step, styles.activeStep]} />
-              <View style={[styles.step, styles.inactiveStep]} />
+              {[...Array(7)].map((_, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.step,
+                    i <= 6 ? styles.activeStep : styles.inactiveStep,
+                  ]}
+                />
+              ))}
             </View>
-            <Text style={styles.title}>Certificates</Text>
           </View>
 
+          {/* Title */}
+          <Text style={styles.title}>Certificates</Text>
           <Text style={styles.subtitle}>Add your certificates and certifications to showcase your skills.</Text>
 
           {/* Add Certificate Form */}
@@ -244,16 +248,20 @@ export default function Onboarding7() {
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
           <View style={styles.progressBarContainer}>
-            <View style={[styles.step, styles.activeStep]} />
-            <View style={[styles.step, styles.activeStep]} />
-            <View style={[styles.step, styles.activeStep]} />
-            <View style={[styles.step, styles.activeStep]} />
-            <View style={[styles.step, styles.activeStep]} />
-            <View style={[styles.step, styles.inactiveStep]} />
+            {[...Array(7)].map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.step,
+                  i <= 6 ? styles.activeStep : styles.inactiveStep,
+                ]}
+              />
+            ))}
           </View>
-          <Text style={styles.title}>Certificates</Text>
         </View>
 
+        {/* Title */}
+        <Text style={styles.title}>Certificates</Text>
         <Text style={styles.subtitle}>Add your certificates and certifications to showcase your skills.</Text>
 
         {/* Certificates List */}

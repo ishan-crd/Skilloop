@@ -62,10 +62,11 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
           <Text style={styles.backArrow}>←</Text>
         </TouchableOpacity>
         
-        <View style={styles.statusIndicators}>
-          <View style={[styles.indicator, styles.greenIndicator]} />
-          <View style={[styles.indicator, styles.orangeIndicator]} />
-        </View>
+        <Image 
+          source={require('../assets/images/skillooplogo.png')} 
+          style={styles.logo}
+          resizeMode="contain"
+        />
         
         <TouchableOpacity style={styles.filterButton}>
           <Text style={styles.filterIcon}>⋮</Text>
@@ -205,20 +206,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#000',
   },
-  statusIndicators: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  indicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  greenIndicator: {
-    backgroundColor: '#10B981',
-  },
-  orangeIndicator: {
-    backgroundColor: '#F59E0B',
+  logo: {
+    width: 40,
+    height: 40,
   },
   filterButton: {
     padding: 8,
@@ -231,6 +221,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
+    marginLeft: 20,
   },
   userName: {
     fontSize: 28,
@@ -360,7 +351,7 @@ const styles = StyleSheet.create({
   },
   professionalCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 50,
+    borderRadius: 30,
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
