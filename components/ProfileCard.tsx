@@ -16,6 +16,23 @@ interface ProfileCardProps {
     bio?: string;
     skills: string[];
     role: string;
+    certificates?: Array<{
+      id: string;
+      title: string;
+      organization: string;
+      issueDate: string;
+      imageUri: string;
+      url: string;
+    }>;
+    workExperiences?: Array<{
+      id: string;
+      company: string;
+      position: string;
+      startDate: string;
+      endDate: string;
+      isCurrent: boolean;
+      logo?: string;
+    }>;
   };
   onCross?: () => void;
   onMatch?: () => void;
@@ -112,7 +129,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
           </View>
         </View>
 
-        {/* Professional Info Card - Directly below basic info */}
+        {/* Professional Info Card - Role (Apple dev) bar */}
         <View style={styles.professionalCard}>
           <Text style={styles.jobTitle}>{user.jobTitle || 'App developer'}</Text>
           <Text style={styles.company}>{user.company || 'Apple inc'}</Text>
@@ -152,6 +169,27 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
           />
         </View>
 
+        {/* Work Experience Section */}
+        {((user.workExperiences && user.workExperiences.length > 0) || (user as any).work_experiences) && (
+          <View style={styles.experienceCard}>
+            <Text style={styles.sectionTitle}>Experience</Text>
+            {((user.workExperiences || (user as any).work_experiences) || []).slice(0, 2).map((exp: any, index: number) => (
+              <View key={exp.id || index} style={styles.experienceItem}>
+                <View style={styles.experienceIcon}>
+                  <Text style={styles.experienceEmoji}>💼</Text>
+                </View>
+                <View style={styles.experienceInfo}>
+                  <Text style={styles.experiencePosition}>{exp.position}</Text>
+                  <Text style={styles.experienceCompany}>{exp.company}</Text>
+                  <Text style={styles.experienceDuration}>
+                    {exp.startDate} - {exp.isCurrent ? 'Present' : exp.endDate}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Third Profile Picture */}
         <View style={styles.profileImageContainer}>
           <Image
@@ -160,6 +198,24 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
             resizeMode="cover"
           />
         </View>
+
+        {/* Certificates Section */}
+        {((user.certificates && user.certificates.length > 0) || (user as any).certificates) && (
+          <View style={styles.certificatesCard}>
+            <Text style={styles.sectionTitle}>Certificates</Text>
+            {((user.certificates || (user as any).certificates) || []).slice(0, 2).map((cert: any, index: number) => (
+              <View key={cert.id || index} style={styles.certificateItem}>
+                <View style={styles.certificateIcon}>
+                  <Text style={styles.certificateEmoji}>🏆</Text>
+                </View>
+                <View style={styles.certificateInfo}>
+                  <Text style={styles.certificateTitle}>{cert.title}</Text>
+                  <Text style={styles.certificateOrg}>{cert.organization}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
 
       {/* Purple Background with Action Buttons */}
@@ -186,8 +242,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: -20,
-    paddingBottom: 20,
+    paddingTop: 0,
+    paddingBottom: 5,
     paddingHorizontal: 20,
     backgroundColor: '#FFFFFF',
     zIndex: 1000,
@@ -203,8 +259,9 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   backArrow: {
-    fontSize: 24,
+    fontSize: 28,
     color: '#000',
+    fontWeight: '900',
   },
   logo: {
     width: 40,
@@ -214,8 +271,9 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   filterIcon: {
-    fontSize: 20,
+    fontSize: 24,
     color: '#000',
+    fontWeight: '900',
   },
   nameContainer: {
     flexDirection: 'row',
@@ -473,6 +531,111 @@ const styles = StyleSheet.create({
   },
   matchIcon: {
     fontSize: 24,
+  },
+  // Certificate and Experience Styles
+  certificatesCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 30,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#000000',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    alignSelf: 'center',
+    width: '95%',
+  },
+  experienceCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 30,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#000000',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    alignSelf: 'center',
+    width: '95%',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: 'MontserratBold',
+    color: '#000',
+    marginBottom: 12,
+  },
+  certificateItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  certificateIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  certificateEmoji: {
+    fontSize: 16,
+  },
+  certificateInfo: {
+    flex: 1,
+  },
+  certificateTitle: {
+    fontSize: 14,
+    fontFamily: 'MontserratSemiBold',
+    color: '#000',
+    marginBottom: 2,
+  },
+  certificateOrg: {
+    fontSize: 12,
+    fontFamily: 'MontserratRegular',
+    color: '#6B7280',
+  },
+  experienceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  experienceIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  experienceEmoji: {
+    fontSize: 16,
+  },
+  experienceInfo: {
+    flex: 1,
+  },
+  experiencePosition: {
+    fontSize: 14,
+    fontFamily: 'MontserratSemiBold',
+    color: '#000',
+    marginBottom: 2,
+  },
+  experienceCompany: {
+    fontSize: 12,
+    fontFamily: 'MontserratRegular',
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  experienceDuration: {
+    fontSize: 11,
+    fontFamily: 'MontserratRegular',
+    color: '#9CA3AF',
   },
 });
 

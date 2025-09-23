@@ -1,11 +1,11 @@
 import * as Font from 'expo-font';
-import React, { useEffect, useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { router } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CustomBottomNavbar from '../../components/CustomBottomNavbar';
 import CustomizeCardModal from '../../components/CustomizeCardModal';
 import EditCardModal from '../../components/EditCardModal';
 import { useAuth } from '../../contexts/AuthContext';
-import { router } from 'expo-router';
 
 interface UserInfo {
   name: string;
@@ -34,7 +34,10 @@ export default function ProfileScreen() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [showCustomizeModal, setShowCustomizeModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
   const { user: currentUser, loading: authLoading, signOut } = useAuth();
+  
+  const flipAnimation = useRef(new Animated.Value(0)).current;
   
   const [userInfo, setUserInfo] = useState<UserInfo>({
     name: '',
@@ -108,6 +111,27 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleCardFlip = () => {
+    const toValue = isFlipped ? 0 : 1;
+    setIsFlipped(!isFlipped);
+    
+    Animated.timing(flipAnimation, {
+      toValue,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const frontInterpolate = flipAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  const backInterpolate = flipAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['180deg', '360deg'],
+  });
+
   if (!fontsLoaded || authLoading) return null;
 
   // Show login prompt if no user
@@ -138,39 +162,122 @@ export default function ProfileScreen() {
           <Text style={styles.cardIcon}>💳</Text>
         </View>
 
-        {/* Business Card */}
-        <View style={[styles.businessCard, { backgroundColor: cardCustomizations.cardBackgroundColor }]}>
-          <Image 
-            source={{ 
-              uri: (userInfo.profileImages && userInfo.profileImages.length > 0) 
-                ? userInfo.profileImages[0] 
-                : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
-            }} 
-            style={styles.profileImage} 
-          />
-          <View style={styles.cardInfo}>
-            <Text style={[styles.userName, { color: cardCustomizations.nameColor }]}>{userInfo.name || 'Erik Tyler'}</Text>
-            <Text style={[styles.userRole, { color: cardCustomizations.roleColor }]}>{userInfo.jobTitle || 'App developer'}</Text>
-            <TouchableOpacity style={styles.websiteLink}>
-              <Text style={[styles.websiteText, { color: cardCustomizations.websiteColor }]}>Website/Portfolio</Text>
-            </TouchableOpacity>
-            <View style={styles.socialIcons}>
-              <View style={[styles.socialIcon, { backgroundColor: '#0077B5' }]}>
-                <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>in</Text>
+        {/* Flippable Business Card */}
+        <View style={styles.cardContainer}>
+          <TouchableOpacity onPress={handleCardFlip} activeOpacity={0.9}>
+            {/* Front of Card */}
+            <Animated.View 
+              style={[
+                styles.businessCard, 
+                { 
+                  backgroundColor: cardCustomizations.cardBackgroundColor,
+                  transform: [{ rotateY: frontInterpolate }]
+                }
+              ]}
+            >
+              <Image 
+                source={{ 
+                  uri: (userInfo.profileImages && userInfo.profileImages.length > 0) 
+                    ? userInfo.profileImages[0] 
+                    : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
+                }} 
+                style={styles.profileImage} 
+              />
+              <View style={styles.cardInfo}>
+                <Text style={[styles.userName, { color: cardCustomizations.nameColor }]}>{userInfo.name || 'Erik Tyler'}</Text>
+                <Text style={[styles.userRole, { color: cardCustomizations.roleColor }]}>{userInfo.jobTitle || 'App developer'}</Text>
+                <TouchableOpacity style={styles.websiteLink}>
+                  <Text style={[styles.websiteText, { color: cardCustomizations.websiteColor }]}>Website/Portfolio</Text>
+                </TouchableOpacity>
+                <View style={styles.socialIcons}>
+                  <View style={[styles.socialIcon, { backgroundColor: '#0077B5' }]}>
+                    <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>in</Text>
+                  </View>
+                  <View style={[styles.socialIcon, { backgroundColor: '#E4405F' }]}>
+                    <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>📷</Text>
+                  </View>
+                  <View style={[styles.socialIcon, { backgroundColor: '#333333' }]}>
+                    <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>🐙</Text>
+                  </View>
+                  <View style={[styles.socialIcon, { backgroundColor: '#F24E1E' }]}>
+                    <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>🎨</Text>
+                  </View>
+                </View>
               </View>
-              <View style={[styles.socialIcon, { backgroundColor: '#E4405F' }]}>
-                <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>📷</Text>
+              <View style={styles.arrowButton}>
+                <Text style={[styles.arrowIcon, { color: cardCustomizations.textColor }]}>«</Text>
               </View>
-              <View style={[styles.socialIcon, { backgroundColor: '#333333' }]}>
-                <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>🐙</Text>
+            </Animated.View>
+
+            {/* Back of Card with QR Code */}
+            <Animated.View 
+              style={[
+                styles.businessCard, 
+                styles.cardBack,
+                { 
+                  backgroundColor: cardCustomizations.cardBackgroundColor,
+                  transform: [{ rotateY: backInterpolate }]
+                }
+              ]}
+            >
+              <View style={styles.qrSection}>
+                <View style={styles.qrCode}>
+                  <Text style={styles.qrText}>QR CODE</Text>
+                  <View style={styles.qrPattern}>
+                    <View style={styles.qrRow}>
+                      <View style={[styles.qrSquare, styles.qrBlack]} />
+                      <View style={[styles.qrSquare, styles.qrWhite]} />
+                      <View style={[styles.qrSquare, styles.qrBlack]} />
+                      <View style={[styles.qrSquare, styles.qrWhite]} />
+                      <View style={[styles.qrSquare, styles.qrBlack]} />
+                    </View>
+                    <View style={styles.qrRow}>
+                      <View style={[styles.qrSquare, styles.qrWhite]} />
+                      <View style={[styles.qrSquare, styles.qrBlack]} />
+                      <View style={[styles.qrSquare, styles.qrWhite]} />
+                      <View style={[styles.qrSquare, styles.qrBlack]} />
+                      <View style={[styles.qrSquare, styles.qrWhite]} />
+                    </View>
+                    <View style={styles.qrRow}>
+                      <View style={[styles.qrSquare, styles.qrBlack]} />
+                      <View style={[styles.qrSquare, styles.qrWhite]} />
+                      <View style={[styles.qrSquare, styles.qrBlack]} />
+                      <View style={[styles.qrSquare, styles.qrWhite]} />
+                      <View style={[styles.qrSquare, styles.qrBlack]} />
+                    </View>
+                    <View style={styles.qrRow}>
+                      <View style={[styles.qrSquare, styles.qrWhite]} />
+                      <View style={[styles.qrSquare, styles.qrBlack]} />
+                      <View style={[styles.qrSquare, styles.qrWhite]} />
+                      <View style={[styles.qrSquare, styles.qrBlack]} />
+                      <View style={[styles.qrSquare, styles.qrWhite]} />
+                    </View>
+                    <View style={styles.qrRow}>
+                      <View style={[styles.qrSquare, styles.qrBlack]} />
+                      <View style={[styles.qrSquare, styles.qrWhite]} />
+                      <View style={[styles.qrSquare, styles.qrBlack]} />
+                      <View style={[styles.qrSquare, styles.qrWhite]} />
+                      <View style={[styles.qrSquare, styles.qrBlack]} />
+                    </View>
+                  </View>
+                </View>
+                <View style={styles.qrInfo}>
+                  <Text style={[styles.userName, { color: cardCustomizations.nameColor }]}>{userInfo.name || 'Erik Tyler'}</Text>
+                  <View style={styles.qrActions}>
+                    <TouchableOpacity style={styles.shareButton}>
+                      <Text style={styles.shareButtonText}>Share</Text>
+                      <Text style={styles.shareIcon}>↗</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.downloadButton}>
+                      <Text style={styles.downloadIcon}>↓</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </View>
-              <View style={[styles.socialIcon, { backgroundColor: '#F24E1E' }]}>
-                <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>🎨</Text>
+              <View style={styles.arrowButton}>
+                <Text style={[styles.arrowIcon, { color: cardCustomizations.textColor }]}>«</Text>
               </View>
-            </View>
-          </View>
-          <TouchableOpacity style={styles.arrowButton}>
-            <Text style={[styles.arrowIcon, { color: cardCustomizations.textColor }]}>></Text>
+            </Animated.View>
           </TouchableOpacity>
         </View>
 
@@ -244,19 +351,42 @@ const styles = StyleSheet.create({
   cardIcon: {
     fontSize: 20,
   },
+  cardContainer: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    height: 120,
+  },
   businessCard: {
+    position: 'absolute',
+    width: '100%',
+    height: 120,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 20,
-    marginHorizontal: 20,
-    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    backfaceVisibility: 'hidden',
+  },
+  cardBack: {
+    position: 'absolute',
+    width: '100%',
+    height: 120,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    backfaceVisibility: 'hidden',
   },
   profileImage: {
     width: 60,
@@ -414,5 +544,96 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  // QR Code Styles
+  qrSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  qrCode: {
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  qrText: {
+    fontSize: 8,
+    fontFamily: 'MontserratBold',
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  qrPattern: {
+    width: 60,
+    height: 60,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#000000',
+  },
+  qrRow: {
+    flexDirection: 'row',
+    height: 12,
+  },
+  qrSquare: {
+    width: 12,
+    height: 12,
+  },
+  qrBlack: {
+    backgroundColor: '#000000',
+  },
+  qrWhite: {
+    backgroundColor: '#FFFFFF',
+  },
+  qrInfo: {
+    flex: 1,
+  },
+  qrActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#000000',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+  },
+  shareButtonText: {
+    fontSize: 12,
+    fontFamily: 'MontserratSemiBold',
+    color: '#000000',
+    marginRight: 4,
+  },
+  shareIcon: {
+    fontSize: 10,
+    color: '#000000',
+  },
+  downloadButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#000000',
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  downloadIcon: {
+    fontSize: 14,
+    color: '#000000',
+  },
+  qrDescription: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 60,
+    fontSize: 10,
+    fontFamily: 'MontserratRegular',
+    color: '#6B7280',
+    textAlign: 'center',
+    textDecorationLine: 'underline',
   },
 });

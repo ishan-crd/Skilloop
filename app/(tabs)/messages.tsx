@@ -100,9 +100,9 @@ export default function MessagesScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Message</Text>
-        <View style={styles.messageIconContainer}>
-          <Text style={styles.messageIcon}>💬</Text>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Messages</Text>
+          <Text style={styles.titleEmoji}>💬</Text>
         </View>
       </View>
 
@@ -136,10 +136,18 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 20,
   },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   title: {
     fontSize: 32,
     fontFamily: 'MontserratBold',
     color: '#000',
+    marginRight: 8,
+  },
+  titleEmoji: {
+    fontSize: 24,
   },
   messageIconContainer: {
     width: 40,

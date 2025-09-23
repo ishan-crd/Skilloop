@@ -28,7 +28,45 @@ const fallbackProfiles = [
     social_profiles: {
       linkedin: 'https://linkedin.com/in/sarahjohnson',
       twitter: 'https://twitter.com/sarahjohnson'
-    }
+    },
+    certificates: [
+      {
+        id: '1',
+        title: 'Certified Scrum Product Owner',
+        organization: 'Scrum Alliance',
+        issueDate: '2023-01-15',
+        imageUri: '',
+        url: ''
+      },
+      {
+        id: '2',
+        title: 'Google Analytics Certified',
+        organization: 'Google',
+        issueDate: '2022-08-20',
+        imageUri: '',
+        url: ''
+      }
+    ],
+    work_experiences: [
+      {
+        id: '1',
+        company: 'TechCorp',
+        position: 'Senior Product Manager',
+        startDate: '2021-03',
+        endDate: '',
+        isCurrent: true,
+        logo: ''
+      },
+      {
+        id: '2',
+        company: 'StartupXYZ',
+        position: 'Product Manager',
+        startDate: '2019-06',
+        endDate: '2021-02',
+        isCurrent: false,
+        logo: ''
+      }
+    ]
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440002',
@@ -49,7 +87,45 @@ const fallbackProfiles = [
     social_profiles: {
       linkedin: 'https://linkedin.com/in/alexchen',
       github: 'https://github.com/alexchen'
-    }
+    },
+    certificates: [
+      {
+        id: '1',
+        title: 'AWS Certified Developer',
+        organization: 'Amazon Web Services',
+        issueDate: '2023-05-10',
+        imageUri: '',
+        url: ''
+      },
+      {
+        id: '2',
+        title: 'React Developer Certification',
+        organization: 'Meta',
+        issueDate: '2022-11-15',
+        imageUri: '',
+        url: ''
+      }
+    ],
+    work_experiences: [
+      {
+        id: '1',
+        company: 'StartupXYZ',
+        position: 'Senior Software Engineer',
+        startDate: '2022-01',
+        endDate: '',
+        isCurrent: true,
+        logo: ''
+      },
+      {
+        id: '2',
+        company: 'TechCorp',
+        position: 'Software Engineer',
+        startDate: '2020-06',
+        endDate: '2021-12',
+        isCurrent: false,
+        logo: ''
+      }
+    ]
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440003',
@@ -70,7 +146,45 @@ const fallbackProfiles = [
     social_profiles: {
       linkedin: 'https://linkedin.com/in/mariarodriguez',
       behance: 'https://behance.net/mariarodriguez'
-    }
+    },
+    certificates: [
+      {
+        id: '1',
+        title: 'UI/UX Design Certificate',
+        organization: 'Google',
+        issueDate: '2023-03-20',
+        imageUri: '',
+        url: ''
+      },
+      {
+        id: '2',
+        title: 'Figma Advanced Certification',
+        organization: 'Figma',
+        issueDate: '2022-12-10',
+        imageUri: '',
+        url: ''
+      }
+    ],
+    work_experiences: [
+      {
+        id: '1',
+        company: 'Design Studio Inc',
+        position: 'UI/UX Design Intern',
+        startDate: '2023-06',
+        endDate: '',
+        isCurrent: true,
+        logo: ''
+      },
+      {
+        id: '2',
+        company: 'Freelance Projects',
+        position: 'Graphic Designer',
+        startDate: '2022-01',
+        endDate: '',
+        isCurrent: true,
+        logo: ''
+      }
+    ]
   }
 ];
 
