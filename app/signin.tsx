@@ -25,6 +25,7 @@ export default function SignIn() {
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExistingUser, setIsExistingUser] = useState(false);
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -63,19 +64,24 @@ export default function SignIn() {
     if (!validatePhone()) return;
 
     setIsLoading(true);
-    // Ensure phone number has proper international format
-    const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace('+91 ', '')}`;
+    // Use the phone number as-is, let the authService handle formatting
     console.log('=== SEND OTP DEBUG ===');
-    console.log('Sending OTP to:', formattedPhone);
+    console.log('Sending OTP to:', phone);
 
-    const result = await authService.sendOTP(formattedPhone);
+    const result = await authService.sendOTP(phone);
     setIsLoading(false);
 
     console.log('Send OTP result:', result);
 
     if (result.success) {
       setIsOtpSent(true);
-      Alert.alert('OTP Sent!', result.message);
+      setIsExistingUser(result.isExistingUser || false);
+      
+      if (result.isExistingUser) {
+        Alert.alert('Welcome Back!', 'This phone number is already registered. Please enter the OTP to login.');
+      } else {
+        Alert.alert('OTP Sent!', 'This is a new number. Please enter the OTP to create your account.');
+      }
     } else {
       Alert.alert('Error', result.message);
     }
@@ -91,6 +97,7 @@ export default function SignIn() {
     console.log('Input OTP:', `"${otp}"`);
     console.log('OTP length:', otp.length);
     console.log('OTP type:', typeof otp);
+    console.log('Is existing user:', isExistingUser);
     
     setIsLoading(true);
     const result = await authService.verifyOTP(otp);
@@ -105,9 +112,22 @@ export default function SignIn() {
       const AsyncStorage = require('@react-native-async-storage/async-storage').default;
       await AsyncStorage.setItem('currentUser', JSON.stringify(result.user));
 
+      console.log('User onboarding status:', result.user.onboarding_completed);
+      console.log('User name:', result.user.name);
+
+      // Show success message
+      if (isExistingUser) {
+        Alert.alert('Login Successful!', 'Welcome back!');
+      } else {
+        Alert.alert('Account Created!', 'Your account has been created successfully!');
+      }
+
+      // Navigate based on onboarding status
       if (result.user.onboarding_completed) {
+        console.log('User has completed onboarding, going to home page');
         router.replace('/(tabs)/discover');
       } else {
+        console.log('User has not completed onboarding, going to onboarding page');
         router.replace('/onboarding1');
       }
     } else {
@@ -135,16 +155,6 @@ export default function SignIn() {
     }
   };
 
-  const testOTP = async () => {
-    console.log('=== TESTING OTP DIRECTLY ===');
-    const result = await authService.sendOTP('+1234567890');
-    console.log('Test send result:', result);
-    
-    const verifyResult = await authService.verifyOTP('123456');
-    console.log('Test verify result:', verifyResult);
-    
-    Alert.alert('Test Result', `Send: ${result.success}, Verify: ${verifyResult.success}`);
-  };
 
   if (!fontsLoaded) return null;
 
@@ -160,7 +170,12 @@ export default function SignIn() {
           resizeMode="contain"
         />
         <Text style={styles.subtitle}>
-          {isOtpSent ? 'Enter the OTP sent to your phone' : 'Sign in or create an account to continue'}
+          {isOtpSent 
+            ? (isExistingUser 
+                ? 'Welcome back! Enter the OTP to login' 
+                : 'Enter the OTP to create your account')
+            : 'Sign in or create an account to continue'
+          }
         </Text>
 
         {!isOtpSent ? (
@@ -202,12 +217,6 @@ export default function SignIn() {
               <Text style={styles.googleText}>Continue with Google</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.googleButton, { backgroundColor: '#FF6B6B', marginTop: 10 }]}
-              onPress={testOTP}
-            >
-              <Text style={styles.googleText}>🧪 Test OTP (Debug)</Text>
-            </TouchableOpacity>
           </>
         ) : (
           <>
@@ -229,7 +238,10 @@ export default function SignIn() {
               disabled={isLoading}
             >
               <Text style={styles.continueText}>
-                {isLoading ? 'Verifying...' : 'Verify OTP'}
+                {isLoading 
+                  ? 'Verifying...' 
+                  : (isExistingUser ? 'Login' : 'Create Account')
+                }
               </Text>
             </TouchableOpacity>
 
@@ -238,6 +250,7 @@ export default function SignIn() {
               onPress={() => {
                 setIsOtpSent(false);
                 setOtp('');
+                setIsExistingUser(false);
               }}
             >
               <Text style={styles.resendButtonText}>Change Phone Number</Text>

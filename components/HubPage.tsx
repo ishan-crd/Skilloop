@@ -1,0 +1,455 @@
+import React from 'react';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
+
+interface HubPageProps {
+  onMyCardPress: () => void;
+}
+
+const HubPage: React.FC<HubPageProps> = ({ onMyCardPress }) => {
+  const { user } = useAuth();
+
+  const featureCards = [
+    {
+      id: 'task-management',
+      title: 'Task Management',
+      currentUsers: 200,
+      targetUsers: 1000,
+      description: '800 more to go to unlock Task Management 🌱'
+    },
+    {
+      id: 'payment',
+      title: 'Payment',
+      currentUsers: 200,
+      targetUsers: 2000,
+      description: '1800 more to go to unlock Payment 🌱'
+    },
+    {
+      id: 'skill-clash',
+      title: 'Skill Clash',
+      currentUsers: 200,
+      targetUsers: 5000,
+      description: '4800 more to go to unlock Skill Clash 🌱'
+    },
+    {
+      id: 'courses',
+      title: 'Courses',
+      currentUsers: 200,
+      targetUsers: 10000,
+      description: '9800 more to go to unlock Courses 🌱'
+    },
+    {
+      id: 'analytics',
+      title: 'Analytics',
+      currentUsers: 200,
+      targetUsers: 5000,
+      description: '4800 more to go to unlock Analytics 🌱'
+    }
+  ];
+
+  const getProgressPercentage = (current: number, target: number) => {
+    return Math.min((current / target) * 100, 100);
+  };
+
+  return (
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Profile Header */}
+      <View style={styles.profileHeader}>
+        <TouchableOpacity style={styles.editButton}>
+          <Text style={styles.editIcon}>✏️</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.filterButton}>
+          <Text style={styles.filterIcon}>⋮</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.settingsButton}>
+          <Text style={styles.settingsIcon}>⚙️</Text>
+        </TouchableOpacity>
+
+        <View style={styles.profileSection}>
+          <Image 
+            source={{ 
+              uri: (user?.profile_images && user.profile_images.length > 0) 
+                ? user.profile_images[0] 
+                : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
+            }} 
+            style={styles.profileImage} 
+          />
+          <Text style={styles.userName}>{user?.name || 'Erik Tyler'}</Text>
+          
+          <View style={styles.actionButtons}>
+            <TouchableOpacity style={styles.myProfileButton}>
+              <Text style={styles.buttonText}>My Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.myCardButton} onPress={onMyCardPress}>
+              <Text style={styles.buttonText}>My Card</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      {/* Feature Cards - Grid Layout */}
+      <View style={styles.featureCardsContainer}>
+        {/* 2x2 Grid */}
+        <View style={styles.gridContainer}>
+          {/* Task Management */}
+          <View style={styles.gridCard}>
+            <View style={styles.lockIconContainer}>
+              <Text style={styles.lockIcon}>🔒</Text>
+            </View>
+            
+            <Text style={styles.featureTitle}>{featureCards[0].title}</Text>
+            
+            <TouchableOpacity style={styles.shareButtonBelow}>
+              <Text style={styles.shareButtonText}>Share</Text>
+              <Text style={styles.shareIcon}>↗</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressFill, 
+                    { width: `${getProgressPercentage(featureCards[0].currentUsers, featureCards[0].targetUsers)}%` }
+                  ]} 
+                />
+              </View>
+            </View>
+            
+            <Text style={styles.userCount}>
+              {featureCards[0].currentUsers}/{featureCards[0].targetUsers} users
+            </Text>
+            
+            <Text style={styles.unlockMessage}>{featureCards[0].description}</Text>
+          </View>
+
+          {/* Payment */}
+          <View style={styles.gridCard}>
+            <View style={styles.lockIconContainer}>
+              <Text style={styles.lockIcon}>🔒</Text>
+            </View>
+            
+            <Text style={styles.featureTitle}>{featureCards[1].title}</Text>
+            
+            <TouchableOpacity style={styles.shareButtonBelow}>
+              <Text style={styles.shareButtonText}>Share</Text>
+              <Text style={styles.shareIcon}>↗</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressFill, 
+                    { width: `${getProgressPercentage(featureCards[1].currentUsers, featureCards[1].targetUsers)}%` }
+                  ]} 
+                />
+              </View>
+            </View>
+            
+            <Text style={styles.userCount}>
+              {featureCards[1].currentUsers}/{featureCards[1].targetUsers} users
+            </Text>
+            
+            <Text style={styles.unlockMessage}>{featureCards[1].description}</Text>
+          </View>
+
+          {/* Skill Clash */}
+          <View style={styles.gridCard}>
+            <View style={styles.lockIconContainer}>
+              <Text style={styles.lockIcon}>🔒</Text>
+            </View>
+            
+            <Text style={styles.featureTitle}>{featureCards[2].title}</Text>
+            
+            <TouchableOpacity style={styles.shareButtonBelow}>
+              <Text style={styles.shareButtonText}>Share</Text>
+              <Text style={styles.shareIcon}>↗</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressFill, 
+                    { width: `${getProgressPercentage(featureCards[2].currentUsers, featureCards[2].targetUsers)}%` }
+                  ]} 
+                />
+              </View>
+            </View>
+            
+            <Text style={styles.userCount}>
+              {featureCards[2].currentUsers}/{featureCards[2].targetUsers} users
+            </Text>
+            
+            <Text style={styles.unlockMessage}>{featureCards[2].description}</Text>
+          </View>
+
+          {/* Courses */}
+          <View style={styles.gridCard}>
+            <View style={styles.lockIconContainer}>
+              <Text style={styles.lockIcon}>🔒</Text>
+            </View>
+            
+            <Text style={styles.featureTitle}>{featureCards[3].title}</Text>
+            
+            <TouchableOpacity style={styles.shareButtonBelow}>
+              <Text style={styles.shareButtonText}>Share</Text>
+              <Text style={styles.shareIcon}>↗</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressFill, 
+                    { width: `${getProgressPercentage(featureCards[3].currentUsers, featureCards[3].targetUsers)}%` }
+                  ]} 
+                />
+              </View>
+            </View>
+            
+            <Text style={styles.userCount}>
+              {featureCards[3].currentUsers}/{featureCards[3].targetUsers} users
+            </Text>
+            
+            <Text style={styles.unlockMessage}>{featureCards[3].description}</Text>
+          </View>
+        </View>
+
+        {/* Bottom Rectangle - Analytics */}
+        <View style={styles.bottomRectangleCard}>
+          <View style={styles.lockIconContainer}>
+            <Text style={styles.lockIcon}>🔒</Text>
+          </View>
+          
+          <Text style={styles.featureTitle}>{featureCards[4].title}</Text>
+          
+          <TouchableOpacity style={styles.shareButtonBelow}>
+            <Text style={styles.shareButtonText}>Share</Text>
+            <Text style={styles.shareIcon}>↗</Text>
+          </TouchableOpacity>
+          
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${getProgressPercentage(featureCards[4].currentUsers, featureCards[4].targetUsers)}%` }
+                ]} 
+              />
+            </View>
+          </View>
+          
+          <Text style={styles.userCount}>
+            {featureCards[4].currentUsers}/{featureCards[4].targetUsers} users
+          </Text>
+          
+          <Text style={styles.unlockMessage}>{featureCards[4].description}</Text>
+        </View>
+      </View>
+    </ScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  profileHeader: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 40,
+    borderWidth: 1,
+    borderColor: '#000000',
+    margin: 20,
+    padding: 20,
+    position: 'relative',
+  },
+  editButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    zIndex: 10,
+  },
+  editIcon: {
+    fontSize: 20,
+  },
+  filterButton: {
+    position: 'absolute',
+    top: 20,
+    right: 50,
+    zIndex: 10,
+  },
+  filterIcon: {
+    fontSize: 16,
+    color: '#000000',
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    zIndex: 10,
+  },
+  settingsIcon: {
+    fontSize: 16,
+  },
+  profileSection: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 16,
+  },
+  userName: {
+    fontSize: 24,
+    fontFamily: 'MontserratBold',
+    color: '#000000',
+    marginBottom: 20,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  myProfileButton: {
+    backgroundColor: '#9ED0C0',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 40,
+    borderWidth: 1,
+    borderColor: '#000000',
+  },
+  myCardButton: {
+    backgroundColor: '#E7AA74',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 40,
+    borderWidth: 1,
+    borderColor: '#000000',
+  },
+  buttonText: {
+    fontSize: 14,
+    fontFamily: 'MontserratSemiBold',
+    color: '#000000',
+  },
+  featureCardsContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  bottomRectangleCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 40,
+    borderWidth: 1,
+    borderColor: '#000000',
+    padding: 20,
+    marginBottom: 16,
+    position: 'relative',
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  gridCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 40,
+    borderWidth: 1,
+    borderColor: '#000000',
+    padding: 16,
+    width: '48%',
+    aspectRatio: 1,
+    marginBottom: 16,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lockIconContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  lockIcon: {
+    fontSize: 20,
+  },
+  featureTitle: {
+    fontSize: 14,
+    fontFamily: 'MontserratBold',
+    color: '#000000',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  shareButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#000000',
+    borderRadius: 40,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  shareButtonBelow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#000000',
+    borderRadius: 40,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginTop: 4,
+    marginBottom: 8,
+    alignSelf: 'center',
+  },
+  shareButtonText: {
+    fontSize: 10,
+    fontFamily: 'MontserratSemiBold',
+    color: '#000000',
+    marginRight: 2,
+  },
+  shareIcon: {
+    fontSize: 8,
+    color: '#000000',
+  },
+  progressContainer: {
+    marginTop: 12,
+    marginBottom: 8,
+    width: '100%',
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#E5E5E5',
+    borderWidth: 1,
+    borderColor: '#000000',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#000000',
+  },
+  userCount: {
+    fontSize: 12,
+    fontFamily: 'MontserratSemiBold',
+    color: '#000000',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  unlockMessage: {
+    fontSize: 10,
+    fontFamily: 'MontserratRegular',
+    color: '#666666',
+    textAlign: 'center',
+    lineHeight: 12,
+  },
+});
+
+export default HubPage;

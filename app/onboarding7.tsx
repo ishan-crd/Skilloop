@@ -97,6 +97,10 @@ export default function Onboarding7() {
       Alert.alert('Error', 'Please enter the issuing date');
       return;
     }
+    if (!currentCertificate.imageUri.trim()) {
+      Alert.alert('Error', 'Please upload a company logo for the certificate');
+      return;
+    }
 
     const certificateToSave = {
       ...currentCertificate,

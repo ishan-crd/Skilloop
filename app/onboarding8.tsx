@@ -56,66 +56,64 @@ export default function Onboarding8() {
         user_work_experiences: onboardingData.workExperiences || [],
       });
 
-      const { data: userId, error: profileError } = await supabase.rpc('create_user_profile', {
-        user_email: tempEmail,
-        user_name: onboardingData.name,
-        user_age: parseInt(onboardingData.age) || 0,
-        user_gender: onboardingData.gender,
-        user_location: onboardingData.location,
-        user_job_title: onboardingData.jobTitle,
-        user_company: onboardingData.company,
-        user_website: onboardingData.website,
-        user_bio: onboardingData.bio,
-        user_role: onboardingData.role,
-        user_skills: onboardingData.skills,
-        user_profile_images: onboardingData.profileImages,
-        user_social_profiles: onboardingData.socialProfiles,
-        user_certificates: onboardingData.certificates || [],
-        user_work_experiences: onboardingData.workExperiences || [],
-      });
+      // Get the current user from AsyncStorage
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      const currentUserData = await AsyncStorage.getItem('currentUser');
+      
+      if (!currentUserData) {
+        Alert.alert('Error', 'No user found. Please sign in again.');
+        return;
+      }
+      
+      const currentUser = JSON.parse(currentUserData);
+      console.log('Current user ID:', currentUser.id);
+      
+      // Update the existing user instead of creating a new one
+      const { data: updatedUser, error: profileError } = await supabase
+        .from('users')
+        .update({
+          name: onboardingData.name,
+          age: parseInt(onboardingData.age) || 0,
+          gender: onboardingData.gender,
+          location: onboardingData.location,
+          job_title: onboardingData.jobTitle,
+          company: onboardingData.company,
+          website: onboardingData.website,
+          bio: onboardingData.bio,
+          role: onboardingData.role,
+          skills: onboardingData.skills,
+          profile_images: onboardingData.profileImages,
+          social_profiles: onboardingData.socialProfiles,
+          certificates: onboardingData.certificates || [],
+          work_experiences: onboardingData.workExperiences || [],
+          onboarding_completed: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentUser.id)
+        .select()
+        .single();
 
       if (profileError) {
         console.error('Profile error:', profileError);
         console.error('Profile error details:', JSON.stringify(profileError, null, 2));
-        Alert.alert('Error', `Failed to create profile: ${profileError.message || 'Unknown error'}`);
+        Alert.alert('Error', `Failed to update profile: ${profileError.message || 'Unknown error'}`);
         return;
       }
 
-      console.log('Profile created successfully');
-      console.log('User ID:', userId);
+      console.log('Profile updated successfully');
+      console.log('Updated user:', updatedUser);
 
-      if (!userId) {
-        Alert.alert('Error', 'Failed to get user ID. Please try again.');
+      if (!updatedUser) {
+        Alert.alert('Error', 'Failed to update user profile. Please try again.');
         return;
       }
 
-      const userData = {
-        id: userId,
-        email: tempEmail,
-        name: onboardingData.name,
-        age: parseInt(onboardingData.age) || 0,
-        gender: onboardingData.gender,
-        location: onboardingData.location,
-        job_title: onboardingData.jobTitle,
-        company: onboardingData.company,
-        website: onboardingData.website,
-        bio: onboardingData.bio,
-        role: onboardingData.role,
-        skills: onboardingData.skills,
-        profile_images: onboardingData.profileImages,
-        social_profiles: onboardingData.socialProfiles,
-        certificates: onboardingData.certificates || [],
-        work_experiences: onboardingData.workExperiences || [],
-        onboarding_completed: true,
-        is_active: true,
-      };
+      // Store the updated user data in AsyncStorage
+      await AsyncStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      console.log('Updated user data stored in AsyncStorage');
 
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      await AsyncStorage.setItem('currentUser', JSON.stringify(userData));
-      console.log('User data stored in AsyncStorage');
-
-      setUserData(userData);
-      console.log('User data set in AuthContext');
+      setUserData(updatedUser);
+      console.log('Updated user data set in AuthContext');
 
       clearOnboardingData();
       Alert.alert(

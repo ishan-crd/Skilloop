@@ -131,29 +131,41 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
 
         {/* Professional Info Card - Role (Apple dev) bar */}
         <View style={styles.professionalCard}>
-          <Text style={styles.jobTitle}>{user.jobTitle || 'App developer'}</Text>
+          <Text style={styles.jobTitle}>{user.job_title || user.jobTitle || 'App developer'}</Text>
           <Text style={styles.company}>{user.company || 'Apple inc'}</Text>
           
-          <TouchableOpacity style={styles.websiteLink}>
-            <Text style={styles.websiteText}>Website/Portfolio</Text>
-          </TouchableOpacity>
+          {user.website && (
+            <TouchableOpacity style={styles.websiteLink}>
+              <Text style={styles.websiteText}>{user.website}</Text>
+            </TouchableOpacity>
+          )}
 
           <View style={styles.socialIconsContainer}>
-            <TouchableOpacity style={[styles.socialIcon, styles.linkedinIcon]}>
-              <Text style={[styles.socialIconText, styles.linkedinText]}>in</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialIcon}>
-              <Text style={styles.socialIconText}>📷</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialIcon}>
-              <Text style={styles.socialIconText}>Up</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialIcon}>
-              <Text style={styles.socialIconText}>X</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialIcon}>
-              <Text style={styles.socialIconText}>🎨</Text>
-            </TouchableOpacity>
+            {user.social_profiles?.linkedin && (
+              <TouchableOpacity style={[styles.socialIcon, styles.linkedinIcon]}>
+                <Text style={[styles.socialIconText, styles.linkedinText]}>in</Text>
+              </TouchableOpacity>
+            )}
+            {user.social_profiles?.instagram && (
+              <TouchableOpacity style={styles.socialIcon}>
+                <Text style={styles.socialIconText}>📷</Text>
+              </TouchableOpacity>
+            )}
+            {user.social_profiles?.upwork && (
+              <TouchableOpacity style={styles.socialIcon}>
+                <Text style={styles.socialIconText}>Up</Text>
+              </TouchableOpacity>
+            )}
+            {user.social_profiles?.twitter && (
+              <TouchableOpacity style={styles.socialIcon}>
+                <Text style={styles.socialIconText}>X</Text>
+              </TouchableOpacity>
+            )}
+            {user.social_profiles?.figma && (
+              <TouchableOpacity style={styles.socialIcon}>
+                <Text style={styles.socialIconText}>🎨</Text>
+              </TouchableOpacity>
+            )}
             <View style={styles.briefcaseIcon}>
               <Text style={styles.briefcaseText}>💼</Text>
             </View>
@@ -169,24 +181,10 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
           />
         </View>
 
-        {/* Work Experience Section */}
-        {((user.workExperiences && user.workExperiences.length > 0) || (user as any).work_experiences) && (
-          <View style={styles.experienceCard}>
-            <Text style={styles.sectionTitle}>Experience</Text>
-            {((user.workExperiences || (user as any).work_experiences) || []).slice(0, 2).map((exp: any, index: number) => (
-              <View key={exp.id || index} style={styles.experienceItem}>
-                <View style={styles.experienceIcon}>
-                  <Text style={styles.experienceEmoji}>💼</Text>
-                </View>
-                <View style={styles.experienceInfo}>
-                  <Text style={styles.experiencePosition}>{exp.position}</Text>
-                  <Text style={styles.experienceCompany}>{exp.company}</Text>
-                  <Text style={styles.experienceDuration}>
-                    {exp.startDate} - {exp.isCurrent ? 'Present' : exp.endDate}
-                  </Text>
-                </View>
-              </View>
-            ))}
+        {/* Bio Section */}
+        {user.bio && (
+          <View style={styles.bioCard}>
+            <Text style={styles.bioText}>{user.bio}</Text>
           </View>
         )}
 
@@ -199,21 +197,43 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
           />
         </View>
 
+        {/* Work Experience Section */}
+        {((user.workExperiences && user.workExperiences.length > 0) || (user as any).work_experiences) && (
+          <View style={styles.experienceCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Experience</Text>
+              <Text style={styles.countText}>+{((user.workExperiences || (user as any).work_experiences) || []).length}</Text>
+            </View>
+            <View style={styles.logoContainer}>
+              {((user.workExperiences || (user as any).work_experiences) || []).slice(0, 2).map((exp: any, index: number) => (
+                <Image 
+                  key={exp.id || index}
+                  source={index === 0 ? require('../assets/images/logoscomp/comp1.png') : require('../assets/images/logoscomp/comp2.png')} 
+                  style={styles.logoImage}
+                  resizeMode="cover"
+                />
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* Certificates Section */}
         {((user.certificates && user.certificates.length > 0) || (user as any).certificates) && (
           <View style={styles.certificatesCard}>
-            <Text style={styles.sectionTitle}>Certificates</Text>
-            {((user.certificates || (user as any).certificates) || []).slice(0, 2).map((cert: any, index: number) => (
-              <View key={cert.id || index} style={styles.certificateItem}>
-                <View style={styles.certificateIcon}>
-                  <Text style={styles.certificateEmoji}>🏆</Text>
-                </View>
-                <View style={styles.certificateInfo}>
-                  <Text style={styles.certificateTitle}>{cert.title}</Text>
-                  <Text style={styles.certificateOrg}>{cert.organization}</Text>
-                </View>
-              </View>
-            ))}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Certification</Text>
+              <Text style={styles.countText}>+{((user.certificates || (user as any).certificates) || []).length}</Text>
+            </View>
+            <View style={styles.logoContainer}>
+              {((user.certificates || (user as any).certificates) || []).slice(0, 2).map((cert: any, index: number) => (
+                <Image 
+                  key={cert.id || index}
+                  source={index === 0 ? require('../assets/images/logoscomp/cert1.png') : require('../assets/images/logoscomp/cert2.png')} 
+                  style={styles.logoImage}
+                  resizeMode="cover"
+                />
+              ))}
+            </View>
           </View>
         )}
       </ScrollView>
@@ -423,15 +443,15 @@ const styles = StyleSheet.create({
     width: '95%',
   },
   jobTitle: {
-    fontSize: 14,
-    fontFamily: 'MontserratRegular',
+    fontSize: 16,
+    fontFamily: 'MontserratSemiBold',
     color: '#000',
     marginBottom: 4,
   },
   company: {
-    fontSize: 12,
-    fontFamily: 'MontserratRegular',
-    color: '#6B7280',
+    fontSize: 16,
+    fontFamily: 'MontserratSemiBold',
+    color: '#000',
     marginBottom: 12,
   },
   websiteLink: {
@@ -535,31 +555,15 @@ const styles = StyleSheet.create({
   // Certificate and Experience Styles
   certificatesCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 30,
     padding: 16,
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
     alignSelf: 'center',
     width: '95%',
   },
   experienceCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 30,
     padding: 16,
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
     alignSelf: 'center',
     width: '95%',
   },
@@ -636,6 +640,61 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'MontserratRegular',
     color: '#9CA3AF',
+  },
+  // New styles for logo containers
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  countText: {
+    fontSize: 16,
+    fontFamily: 'MontserratSemiBold',
+    color: '#2E5ED7',
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 16,
+  },
+  logoBox: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: '#000000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+  },
+  logoText: {
+    fontSize: 24,
+    fontFamily: 'MontserratBold',
+    textAlign: 'center',
+    color: '#000000',
+  },
+  logoImage: {
+    width: 155,
+    height: 155,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: '#000000',
+  },
+  bioCard: {
+    backgroundColor: '#F9F9F9',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    alignSelf: 'center',
+    width: '95%',
+  },
+  bioText: {
+    fontSize: 16,
+    fontFamily: 'MontserratRegular',
+    color: '#000000',
+    lineHeight: 24,
+    textAlign: 'center',
   },
 });
 

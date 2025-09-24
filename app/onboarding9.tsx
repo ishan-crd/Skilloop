@@ -104,6 +104,10 @@ export default function Onboarding9() {
       Alert.alert('Error', 'Please enter an end date or mark as current position');
       return;
     }
+    if (!currentExperience.logoUri.trim()) {
+      Alert.alert('Error', 'Please upload a company logo for the experience');
+      return;
+    }
 
     const experienceToSave = {
       ...currentExperience,

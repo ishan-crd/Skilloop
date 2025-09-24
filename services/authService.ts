@@ -4,6 +4,7 @@ class AuthService {
   private confirmationResult: any = null;
   private storedOTP: string | null = null;
   private storedPhone: string | null = null;
+  private isProcessing: boolean = false;
   
   // Singleton pattern
   private static instance: AuthService;
@@ -15,33 +16,64 @@ class AuthService {
     return AuthService.instance;
   }
 
-  // Phone number authentication - Mock OTP for now
-  async sendOTP(phoneNumber: string): Promise<{ success: boolean; message: string }> {
+  // Phone number authentication - Check if phone exists and handle accordingly
+  async sendOTP(phoneNumber: string): Promise<{ success: boolean; message: string; isExistingUser?: boolean }> {
     try {
-      console.log(`[AuthService] Sending mock OTP to ${phoneNumber}`);
-      console.log(`[AuthService] Current instance:`, this);
-      console.log(`[AuthService] Current storedOTP:`, this.storedOTP);
+      console.log(`[AuthService] Sending OTP to ${phoneNumber}`);
 
-      // Format phone number (ensure it starts with +)
-      const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`;
+      // Standardize phone number format
+      let formattedPhone = this.normalizePhoneNumber(phoneNumber);
+      
+      console.log(`[AuthService] Original phone: ${phoneNumber}`);
       console.log(`[AuthService] Formatted phone: ${formattedPhone}`);
+
+      // Check if phone number already exists in database
+      console.log(`[AuthService] Searching for phone: "${formattedPhone}"`);
+      
+      // Check for existing user with this phone number
+      const { data: existingUser, error } = await supabase
+        .from('users')
+        .select('id, name, phone, onboarding_completed, is_active')
+        .eq('phone', formattedPhone)
+        .eq('is_active', true)
+        .single();
+
+      console.log(`[AuthService] Database query result:`, { existingUser, error });
+
+      // Handle database errors (but not "no rows found" error)
+      if (error && error.code !== 'PGRST116') {
+        console.error('[AuthService] Error checking phone existence:', error);
+        return {
+          success: false,
+          message: 'Failed to check phone number'
+        };
+      }
 
       // Use a fixed OTP for testing
       const mockOTP = '123456';
       console.log(`[AuthService] Using fixed OTP: ${mockOTP}`);
 
-      // Store in memory (simpler than AsyncStorage)
+      // Store in memory
       this.storedOTP = mockOTP;
       this.storedPhone = formattedPhone;
 
-      console.log(`[AuthService] After storing - OTP: ${this.storedOTP}, Phone: ${this.storedPhone}`);
-
-      return {
-        success: true,
-        message: `OTP sent successfully! Use OTP: ${mockOTP}`
-      };
+      if (existingUser) {
+        console.log(`[AuthService] Phone number exists for user: ${existingUser.name}`);
+        return {
+          success: true,
+          message: `OTP sent successfully! Use OTP: ${mockOTP}`,
+          isExistingUser: true
+        };
+      } else {
+        console.log(`[AuthService] Phone number is new, will create account`);
+        return {
+          success: true,
+          message: `OTP sent successfully! Use OTP: ${mockOTP}`,
+          isExistingUser: false
+        };
+      }
     } catch (error: any) {
-      console.error('[AuthService] Error sending mock OTP:', error);
+      console.error('[AuthService] Error sending OTP:', error);
       return {
         success: false,
         message: 'Failed to send OTP'
@@ -49,55 +81,175 @@ class AuthService {
     }
   }
 
+  // Helper method to normalize phone numbers
+  private normalizePhoneNumber(phoneNumber: string): string {
+    // Remove all spaces and special characters except +
+    let cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
+    
+    // Handle different input formats
+    if (cleaned.startsWith('+91')) {
+      return cleaned;
+    } else if (cleaned.startsWith('91') && cleaned.length === 12) {
+      return '+' + cleaned;
+    } else if (cleaned.startsWith('9876543210')) {
+      return '+919876543210';
+    } else if (cleaned.length === 10 && !cleaned.startsWith('+')) {
+      return '+91' + cleaned;
+    } else if (!cleaned.startsWith('+')) {
+      return '+' + cleaned;
+    }
+    
+    return cleaned;
+  }
+
   async verifyOTP(otp: string): Promise<{ success: boolean; user?: User; message: string }> {
     try {
-      console.log(`[AuthService] Verifying mock OTP: "${otp}"`);
-      console.log(`[AuthService] Current instance:`, this);
-      console.log(`[AuthService] Stored OTP: "${this.storedOTP}", Phone: "${this.storedPhone}"`);
-      console.log(`[AuthService] OTP type: ${typeof otp}, Stored type: ${typeof this.storedOTP}`);
-      console.log(`[AuthService] OTP length: ${otp.length}, Stored length: ${this.storedOTP?.length}`);
-      console.log(`[AuthService] Comparison: "${otp.trim()}" === "${this.storedOTP}" = ${otp.trim() === this.storedOTP}`);
-      
-      // Simple comparison
-      if (otp.trim() === this.storedOTP && this.storedPhone) {
-        console.log('[AuthService] OTP verification successful!');
-        
-        // Create a mock user for now (bypass database)
-        const mockUser: User = {
-          id: 'user_' + Date.now(),
-          phone: this.storedPhone,
-          email: `user_${Date.now()}@skilloop.demo`,
-          name: 'New User',
-          age: 25,
-          gender: 'Other',
-          location: 'Unknown',
-          profile_images: ['https://via.placeholder.com/300x300/cccccc/666666?text=User', 'https://via.placeholder.com/300x300/cccccc/666666?text=User'],
-          skills: [],
-          social_profiles: {},
-          role: 'Freelancer',
-          onboarding_completed: false,
-          is_active: true,
-          last_seen: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-
-        console.log('[AuthService] Mock user created:', mockUser.id);
-        return {
-          success: true,
-          user: mockUser,
-          message: 'Login successful'
-        };
-      } else {
-        console.log('[AuthService] Invalid OTP or phone number');
-        console.log(`[AuthService] Expected: "${this.storedOTP}", Got: "${otp.trim()}"`);
+      // Prevent multiple simultaneous calls
+      if (this.isProcessing) {
+        console.log('[AuthService] Already processing OTP verification, please wait...');
         return {
           success: false,
-          message: `Invalid OTP code. Expected: ${this.storedOTP}, Got: ${otp.trim()}`
+          message: 'Please wait, verification in progress...'
         };
       }
+      
+      this.isProcessing = true;
+      
+      console.log(`[AuthService] Verifying OTP: "${otp}"`);
+      console.log(`[AuthService] Stored OTP: "${this.storedOTP}", Phone: "${this.storedPhone}"`);
+      
+      // Verify OTP - only accept 123456
+      if (otp.trim() !== '123456') {
+        console.log('[AuthService] Invalid OTP - not 123456');
+        this.isProcessing = false;
+        return {
+          success: false,
+          message: `Invalid OTP code. Please enter: 123456`
+        };
+      }
+      
+      if (!this.storedPhone) {
+        console.log('[AuthService] No stored phone number');
+        this.isProcessing = false;
+        return {
+          success: false,
+          message: 'No phone number found. Please try again.'
+        };
+      }
+
+      console.log('[AuthService] OTP verification successful!');
+      console.log('[AuthService] Looking for phone:', this.storedPhone);
+
+      // First, check if user exists with this exact phone number
+      const { data: existingUser, error: fetchError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('phone', this.storedPhone)
+        .eq('is_active', true)
+        .single();
+
+      console.log(`[AuthService] Database lookup result:`, { existingUser, error: fetchError });
+
+      if (existingUser) {
+        // User exists - log them in
+        console.log('[AuthService] Existing user found, logging in:', existingUser.name);
+        console.log('[AuthService] User onboarding status:', existingUser.onboarding_completed);
+        
+        // Update last_seen
+        await supabase
+          .from('users')
+          .update({ last_seen: new Date().toISOString() })
+          .eq('id', existingUser.id);
+
+        this.isProcessing = false;
+        return {
+          success: true,
+          user: existingUser,
+          message: 'Login successful'
+        };
+      }
+
+      // If no existing user found, create new one
+      console.log('[AuthService] No existing user found, creating new account for phone:', this.storedPhone);
+      
+      // Generate a proper UUID for new user
+      const newUserId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+      
+      // Create user object with all required fields
+      const newUser = {
+        id: newUserId,
+        phone: this.storedPhone,
+        email: `user_${Date.now()}@skilloop.demo`,
+        name: 'New User',
+        age: 25,
+        gender: 'Other',
+        location: 'Unknown',
+        profile_images: ['https://via.placeholder.com/300x300/cccccc/666666?text=User', 'https://via.placeholder.com/300x300/cccccc/666666?text=User'],
+        skills: [],
+        social_profiles: {},
+        role: 'Freelancer',
+        onboarding_completed: false,
+        is_active: true,
+        last_seen: new Date().toISOString()
+      };
+
+      console.log('[AuthService] Creating user with phone:', this.storedPhone);
+      console.log('[AuthService] User data:', newUser);
+
+      // Insert new user into database
+      const { data: createdUser, error: createError } = await supabase
+        .from('users')
+        .insert(newUser)
+        .select()
+        .single();
+
+      console.log('[AuthService] Create user result:', { createdUser, createError });
+
+      if (createError) {
+        console.error('[AuthService] Error creating user:', createError);
+        
+        // If it's a duplicate key error, try to fetch the existing user
+        if (createError.code === '23505' || createError.message.includes('duplicate')) {
+          console.log('[AuthService] Duplicate key error, fetching existing user');
+          const { data: existingUser, error: fetchError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('phone', this.storedPhone)
+            .eq('is_active', true)
+            .single();
+            
+          if (existingUser) {
+            console.log('[AuthService] Found existing user after duplicate error:', existingUser.name);
+            this.isProcessing = false;
+            return {
+              success: true,
+              user: existingUser,
+              message: 'Login successful'
+            };
+          }
+        }
+        
+        this.isProcessing = false;
+        return {
+          success: false,
+          message: `Failed to create account: ${createError.message}`
+        };
+      }
+
+      console.log('[AuthService] New user created successfully:', createdUser.id);
+      this.isProcessing = false;
+      return {
+        success: true,
+        user: createdUser,
+        message: 'Account created successfully'
+      };
     } catch (error: any) {
       console.error('[AuthService] Error verifying OTP:', error);
+      this.isProcessing = false;
       return {
         success: false,
         message: 'Failed to verify OTP'

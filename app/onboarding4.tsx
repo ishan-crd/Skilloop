@@ -9,6 +9,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useOnboarding } from "../contexts/OnboardingContext";
 
 const DEFAULT_SKILLS = [
   "Editor",
@@ -73,6 +74,7 @@ export default function Onboarding4() {
     bio: "",
   });
   const router = useRouter();
+  const { updateOnboardingData } = useOnboarding();
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -124,6 +126,11 @@ export default function Onboarding4() {
 
   const handleContinue = () => {
     if (validateForm()) {
+      // Save skills and bio to onboarding context
+      updateOnboardingData({
+        skills: skills,
+        bio: bio,
+      });
       router.push("/onboarding5");
     }
   };
