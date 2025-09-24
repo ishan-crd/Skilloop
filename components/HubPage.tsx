@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 
 interface HubPageProps {
@@ -52,7 +52,13 @@ const HubPage: React.FC<HubPageProps> = ({ onMyCardPress }) => {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.container} 
+      showsVerticalScrollIndicator={false}
+      // Android-specific optimizations
+      removeClippedSubviews={Platform.OS === 'android'}
+      scrollEventThrottle={16}
+    >
       {/* Profile Header */}
       <View style={styles.profileHeader}>
         <TouchableOpacity style={styles.editButton}>
@@ -94,7 +100,11 @@ const HubPage: React.FC<HubPageProps> = ({ onMyCardPress }) => {
         {/* 2x2 Grid */}
         <View style={styles.gridContainer}>
           {/* Task Management */}
-          <View style={styles.gridCard}>
+          <TouchableOpacity 
+            style={styles.gridCard}
+            activeOpacity={0.7}
+            onPress={() => console.log('Task Management pressed')}
+          >
             <View style={styles.lockIconContainer}>
               <Text style={styles.lockIcon}>🔒</Text>
             </View>
@@ -122,10 +132,14 @@ const HubPage: React.FC<HubPageProps> = ({ onMyCardPress }) => {
             </Text>
             
             <Text style={styles.unlockMessage}>{featureCards[0].description}</Text>
-          </View>
+          </TouchableOpacity>
 
           {/* Payment */}
-          <View style={styles.gridCard}>
+          <TouchableOpacity 
+            style={styles.gridCard}
+            activeOpacity={0.7}
+            onPress={() => console.log('Payment pressed')}
+          >
             <View style={styles.lockIconContainer}>
               <Text style={styles.lockIcon}>🔒</Text>
             </View>
@@ -153,10 +167,14 @@ const HubPage: React.FC<HubPageProps> = ({ onMyCardPress }) => {
             </Text>
             
             <Text style={styles.unlockMessage}>{featureCards[1].description}</Text>
-          </View>
+          </TouchableOpacity>
 
           {/* Skill Clash */}
-          <View style={styles.gridCard}>
+          <TouchableOpacity 
+            style={styles.gridCard}
+            activeOpacity={0.7}
+            onPress={() => console.log('Skill Clash pressed')}
+          >
             <View style={styles.lockIconContainer}>
               <Text style={styles.lockIcon}>🔒</Text>
             </View>
@@ -184,10 +202,14 @@ const HubPage: React.FC<HubPageProps> = ({ onMyCardPress }) => {
             </Text>
             
             <Text style={styles.unlockMessage}>{featureCards[2].description}</Text>
-          </View>
+          </TouchableOpacity>
 
           {/* Courses */}
-          <View style={styles.gridCard}>
+          <TouchableOpacity 
+            style={styles.gridCard}
+            activeOpacity={0.7}
+            onPress={() => console.log('Courses pressed')}
+          >
             <View style={styles.lockIconContainer}>
               <Text style={styles.lockIcon}>🔒</Text>
             </View>
@@ -215,11 +237,15 @@ const HubPage: React.FC<HubPageProps> = ({ onMyCardPress }) => {
             </Text>
             
             <Text style={styles.unlockMessage}>{featureCards[3].description}</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Bottom Rectangle - Analytics */}
-        <View style={styles.bottomRectangleCard}>
+        <TouchableOpacity 
+          style={styles.bottomRectangleCard}
+          activeOpacity={0.7}
+          onPress={() => console.log('Analytics pressed')}
+        >
           <View style={styles.lockIconContainer}>
             <Text style={styles.lockIcon}>🔒</Text>
           </View>
@@ -247,7 +273,7 @@ const HubPage: React.FC<HubPageProps> = ({ onMyCardPress }) => {
           </Text>
           
           <Text style={styles.unlockMessage}>{featureCards[4].description}</Text>
-        </View>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -263,9 +289,17 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     borderWidth: 1,
     borderColor: '#000000',
-    margin: 20,
-    padding: 20,
+    margin: Platform.OS === 'android' ? 16 : 20, // Reduced margin for Android
+    padding: Platform.OS === 'android' ? 16 : 20, // Reduced padding for Android
     position: 'relative',
+    // Android-specific optimizations
+    ...(Platform.OS === 'android' && {
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+    }),
   },
   editButton: {
     position: 'absolute',
@@ -313,23 +347,34 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Platform.OS === 'android' ? 8 : 12, // Reduced gap for Android
+    justifyContent: 'center',
   },
   myProfileButton: {
     backgroundColor: '#9ED0C0',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: Platform.OS === 'android' ? 16 : 20, // Reduced padding for Android
+    paddingVertical: Platform.OS === 'android' ? 8 : 10,
     borderRadius: 40,
     borderWidth: 1,
     borderColor: '#000000',
+    // Android-specific optimizations
+    ...(Platform.OS === 'android' && {
+      minHeight: 44, // Minimum touch target size
+      elevation: 1,
+    }),
   },
   myCardButton: {
     backgroundColor: '#E7AA74',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: Platform.OS === 'android' ? 16 : 20, // Reduced padding for Android
+    paddingVertical: Platform.OS === 'android' ? 8 : 10,
     borderRadius: 40,
     borderWidth: 1,
     borderColor: '#000000',
+    // Android-specific optimizations
+    ...(Platform.OS === 'android' && {
+      minHeight: 44, // Minimum touch target size
+      elevation: 1,
+    }),
   },
   buttonText: {
     fontSize: 14,
@@ -345,28 +390,48 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     borderWidth: 1,
     borderColor: '#000000',
-    padding: 20,
+    padding: Platform.OS === 'android' ? 16 : 20, // Reduced padding for Android
     marginBottom: 16,
     position: 'relative',
+    // Android-specific optimizations
+    ...(Platform.OS === 'android' && {
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+    }),
   },
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 16,
+    // Android-specific optimizations
+    ...(Platform.OS === 'android' && {
+      flex: 1,
+    }),
   },
   gridCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 40,
     borderWidth: 1,
     borderColor: '#000000',
-    padding: 16,
+    padding: Platform.OS === 'android' ? 12 : 16, // Reduced padding for Android
     width: '48%',
     aspectRatio: 1,
     marginBottom: 16,
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
+    // Android-specific optimizations
+    ...(Platform.OS === 'android' && {
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+    }),
   },
   lockIconContainer: {
     alignItems: 'center',
@@ -376,11 +441,16 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   featureTitle: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'android' ? 12 : 14, // Smaller font for Android
     fontFamily: 'MontserratBold',
     color: '#000000',
     textAlign: 'center',
     marginBottom: 8,
+    // Android-specific optimizations
+    ...(Platform.OS === 'android' && {
+      includeFontPadding: false,
+      textAlignVertical: 'center',
+    }),
   },
   shareButton: {
     position: 'absolute',
@@ -403,11 +473,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#000000',
     borderRadius: 40,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: Platform.OS === 'android' ? 6 : 8, // Reduced padding for Android
+    paddingVertical: Platform.OS === 'android' ? 3 : 4,
     marginTop: 4,
     marginBottom: 8,
     alignSelf: 'center',
+    // Android-specific optimizations
+    ...(Platform.OS === 'android' && {
+      minHeight: 32, // Minimum touch target size
+      elevation: 1,
+    }),
   },
   shareButtonText: {
     fontSize: 10,
@@ -437,18 +512,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   userCount: {
-    fontSize: 12,
+    fontSize: Platform.OS === 'android' ? 10 : 12, // Smaller font for Android
     fontFamily: 'MontserratSemiBold',
     color: '#000000',
     textAlign: 'center',
     marginBottom: 6,
+    // Android-specific optimizations
+    ...(Platform.OS === 'android' && {
+      includeFontPadding: false,
+    }),
   },
   unlockMessage: {
-    fontSize: 10,
+    fontSize: Platform.OS === 'android' ? 9 : 10, // Smaller font for Android
     fontFamily: 'MontserratRegular',
     color: '#666666',
     textAlign: 'center',
-    lineHeight: 12,
+    lineHeight: Platform.OS === 'android' ? 11 : 12,
+    // Android-specific optimizations
+    ...(Platform.OS === 'android' && {
+      includeFontPadding: false,
+    }),
   },
 });
 

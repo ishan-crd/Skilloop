@@ -377,12 +377,12 @@ const styles = StyleSheet.create({
   cardContainer: {
     marginHorizontal: 20,
     marginBottom: 20,
-    height: 120,
+    height: 140, // Increased height
   },
   businessCard: {
     position: 'absolute',
     width: '100%',
-    height: 120,
+    height: 140, // Increased height
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   cardBack: {
     position: 'absolute',
     width: '100%',
-    height: 120,
+    height: 140, // Increased height
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',

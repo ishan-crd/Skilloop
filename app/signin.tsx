@@ -13,6 +13,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import GoogleSignIn from "../components/GoogleSignIn";
 import { authService } from "../services/authService";
 const router = useRouter();
 
@@ -135,23 +136,30 @@ export default function SignIn() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = async (email: string, name: string) => {
     setIsLoading(true);
-    const result = await authService.signInWithGoogle();
-    setIsLoading(false);
+    
+    try {
+      // Create user with Google data
+      const result = await authService.createGoogleUser(email, name);
+      setIsLoading(false);
 
-    if (result.success && result.user) {
-      // Store user data
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      await AsyncStorage.setItem('currentUser', JSON.stringify(result.user));
+      if (result.success && result.user) {
+        // Store user data
+        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+        await AsyncStorage.setItem('currentUser', JSON.stringify(result.user));
 
-      if (result.user.onboarding_completed) {
-        router.replace('/(tabs)/discover');
+        if (result.user.onboarding_completed) {
+          router.replace('/(tabs)/discover');
+        } else {
+          router.replace('/onboarding1');
+        }
       } else {
-        router.replace('/onboarding1');
+        Alert.alert('Error', result.message);
       }
-    } else {
-      Alert.alert('Error', result.message);
+    } catch (error) {
+      setIsLoading(false);
+      Alert.alert('Error', 'Failed to sign in with Google');
     }
   };
 
@@ -205,17 +213,13 @@ export default function SignIn() {
               <View style={styles.line} />
             </View>
 
-            <TouchableOpacity
-              style={[styles.googleButton, isLoading && styles.disabledButton]}
-              onPress={handleGoogleSignIn}
+            <GoogleSignIn
+              onSignIn={handleGoogleSignIn}
+              onError={(error) => Alert.alert('Error', error)}
               disabled={isLoading}
-            >
-              <Image
-                source={require("../assets/images/google.png")}
-                style={styles.googleIcon}
-              />
-              <Text style={styles.googleText}>Continue with Google</Text>
-            </TouchableOpacity>
+              style={styles.googleButton}
+              textStyle={styles.googleText}
+            />
 
           </>
         ) : (

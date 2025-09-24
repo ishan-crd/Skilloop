@@ -257,54 +257,87 @@ class AuthService {
     }
   }
 
-  // Google authentication
-  async signInWithGoogle(): Promise<{ success: boolean; user?: User; message: string }> {
+  // Create Google user with real email and name
+  async createGoogleUser(email: string, name: string): Promise<{ success: boolean; user?: User; message: string }> {
     try {
-      // For now, we'll simulate Google sign-in
-      // In production, integrate with Google Sign-In
-      const mockEmail = 'user@gmail.com';
-      const mockName = 'Google User';
+      console.log('[AuthService] Creating Google user with email:', email);
 
       // Check if user exists
       const { data: existingUser, error } = await supabase
         .from('users')
         .select('*')
-        .eq('email', mockEmail)
+        .eq('email', email)
+        .eq('is_active', true)
         .single();
 
+      console.log('[AuthService] Google auth - existing user check:', { existingUser, error });
+
       if (error && error.code !== 'PGRST116') {
+        console.error('[AuthService] Error checking existing Google user:', error);
+        console.error('[AuthService] Error code:', error.code);
+        console.error('[AuthService] Error message:', error.message);
         throw error;
       }
 
       if (existingUser) {
+        console.log('[AuthService] Existing Google user found:', existingUser.name);
+        console.log('[AuthService] User onboarding status:', existingUser.onboarding_completed);
+        
+        // Update last_seen
+        await supabase
+          .from('users')
+          .update({ last_seen: new Date().toISOString() })
+          .eq('id', existingUser.id);
+
         return {
           success: true,
           user: existingUser,
           message: 'Login successful'
         };
       } else {
-        // Create new user with all required fields
+        console.log('[AuthService] Creating new Google user with email:', email);
+        
+        // Generate a proper UUID for new user
+        const newUserId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0;
+          const v = c == 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+
+        // Create new user with minimal data - only email and name, let onboarding fill the rest
         const { data: newUser, error: createError } = await supabase
           .from('users')
           .insert({
-            email: mockEmail,
-            name: mockName,
-            phone: `+1${Math.floor(Math.random() * 10000000000)}`,
-            age: 25,
-            gender: 'Other',
-            location: 'Unknown',
-            profile_images: ['https://via.placeholder.com/300x300/cccccc/666666?text=Google', 'https://via.placeholder.com/300x300/cccccc/666666?text=Google'],
+            id: newUserId,
+            email: email,
+            name: name,
+            phone: null, // No phone for Google users
+            age: 18, // Minimum required age, will be updated in onboarding
+            gender: 'Other', // Temporary value, will be updated in onboarding
+            location: 'Unknown', // Temporary value, will be updated in onboarding
+            profile_images: [
+              'https://via.placeholder.com/300x300/cccccc/666666?text=Profile1',
+              'https://via.placeholder.com/300x300/cccccc/666666?text=Profile2'
+            ], // Temporary placeholders - need 2-4 images
             skills: [],
             social_profiles: {},
-            role: 'Freelancer',
-            onboarding_completed: false,
+            role: 'Freelancer', // Temporary role, will be updated in onboarding
+            onboarding_completed: false, // Always start with onboarding
             is_active: true,
             last_seen: new Date().toISOString()
           })
           .select()
           .single();
 
-        if (createError) throw createError;
+        console.log('[AuthService] Google user creation result:', { newUser, createError });
+
+        if (createError) {
+          console.error('[AuthService] Error creating Google user:', createError);
+          console.error('[AuthService] Error code:', createError.code);
+          console.error('[AuthService] Error message:', createError.message);
+          console.error('[AuthService] Error details:', createError.details);
+          throw createError;
+        }
 
         return {
           success: true,
@@ -313,7 +346,115 @@ class AuthService {
         };
       }
     } catch (error) {
-      console.error('Error with Google sign-in:', error);
+      console.error('[AuthService] Error with Google user creation:', error);
+      return {
+        success: false,
+        message: 'Failed to create Google user'
+      };
+    }
+  }
+
+  // Google authentication (legacy method - now uses createGoogleUser)
+  async signInWithGoogle(): Promise<{ success: boolean; user?: User; message: string }> {
+    try {
+      console.log('[AuthService] Starting Google Sign-In process...');
+
+      // For now, we'll use a simulated approach that works with the class structure
+      // In a real implementation, you'd need to move this to a React component
+      // where you can use the Google.useAuthRequest hook
+      
+      // Simulate Google authentication for now
+      const mockEmail = `user${Date.now()}@gmail.com`;
+      const mockName = 'Google User';
+
+      console.log('[AuthService] Google Sign-In successful (simulated)');
+      console.log('[AuthService] Google user details:', { email: mockEmail, name: mockName });
+
+      // Check if user exists
+      const { data: existingUser, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', mockEmail)
+        .eq('is_active', true)
+        .single();
+
+      console.log('[AuthService] Google auth - existing user check:', { existingUser, error });
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('[AuthService] Error checking existing Google user:', error);
+        console.error('[AuthService] Error code:', error.code);
+        console.error('[AuthService] Error message:', error.message);
+        throw error;
+      }
+
+      if (existingUser) {
+        console.log('[AuthService] Existing Google user found:', existingUser.name);
+        console.log('[AuthService] User onboarding status:', existingUser.onboarding_completed);
+        
+        // Update last_seen
+        await supabase
+          .from('users')
+          .update({ last_seen: new Date().toISOString() })
+          .eq('id', existingUser.id);
+
+        return {
+          success: true,
+          user: existingUser,
+          message: 'Login successful'
+        };
+      } else {
+        console.log('[AuthService] Creating new Google user with email:', mockEmail);
+        
+        // Generate a proper UUID for new user
+        const newUserId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0;
+          const v = c == 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+
+        // Create new user with minimal data - only email and name, let onboarding fill the rest
+        const { data: newUser, error: createError } = await supabase
+          .from('users')
+          .insert({
+            id: newUserId,
+            email: mockEmail,
+            name: mockName,
+            phone: null, // No phone for Google users
+            age: 18, // Minimum required age, will be updated in onboarding
+            gender: 'Other', // Temporary value, will be updated in onboarding
+            location: 'Unknown', // Temporary value, will be updated in onboarding
+            profile_images: [
+              'https://via.placeholder.com/300x300/cccccc/666666?text=Profile1',
+              'https://via.placeholder.com/300x300/cccccc/666666?text=Profile2'
+            ], // Temporary placeholders - need 2-4 images
+            skills: [],
+            social_profiles: {},
+            role: 'Freelancer', // Temporary role, will be updated in onboarding
+            onboarding_completed: false, // Always start with onboarding
+            is_active: true,
+            last_seen: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        console.log('[AuthService] Google user creation result:', { newUser, createError });
+
+        if (createError) {
+          console.error('[AuthService] Error creating Google user:', createError);
+          console.error('[AuthService] Error code:', createError.code);
+          console.error('[AuthService] Error message:', createError.message);
+          console.error('[AuthService] Error details:', createError.details);
+          throw createError;
+        }
+
+        return {
+          success: true,
+          user: newUser,
+          message: 'Account created successfully'
+        };
+      }
+    } catch (error) {
+      console.error('[AuthService] Error with Google sign-in:', error);
       return {
         success: false,
         message: 'Failed to sign in with Google'

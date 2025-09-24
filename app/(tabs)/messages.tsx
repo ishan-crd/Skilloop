@@ -1,4 +1,5 @@
 import * as Font from 'expo-font';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CustomBottomNavbar from '../../components/CustomBottomNavbar';
@@ -51,6 +52,7 @@ export default function MessagesScreen() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const { user: currentUser, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -109,7 +111,11 @@ export default function MessagesScreen() {
       {/* Conversations List */}
       <ScrollView style={styles.conversationsList} showsVerticalScrollIndicator={false}>
         {conversations.map((conversation) => (
-          <TouchableOpacity key={conversation.id} style={styles.conversationCard}>
+          <TouchableOpacity 
+            key={conversation.id} 
+            style={styles.conversationCard}
+            onPress={() => router.push('/chat')}
+          >
             <Image source={{ uri: conversation.profileImage }} style={styles.profileImage} />
             <View style={styles.conversationInfo}>
               <Text style={styles.conversationName}>{conversation.name}</Text>
