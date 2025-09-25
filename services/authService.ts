@@ -183,7 +183,7 @@ class AuthService {
       const newUser = {
         id: newUserId,
         phone: this.storedPhone,
-        email: `user_${Date.now()}@skilloop.demo`,
+        email: null, // No email for mobile users
         name: 'New User',
         age: 25,
         gender: 'Other',

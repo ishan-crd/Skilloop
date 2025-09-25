@@ -107,9 +107,13 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
         {/* First Profile Picture */}
         <View style={styles.profileImageContainer}>
           <Image
-            source={require('../assets/profile/demo1.png')}
+            source={{ 
+              uri: (user.profileImages && user.profileImages[0]) || 
+                   'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=500&fit=crop&crop=face' 
+            }}
             style={styles.profileImage}
             resizeMode="cover"
+            onError={() => console.log('Failed to load main profile image for:', user.name)}
           />
         </View>
 
@@ -142,7 +146,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
 
           <View style={styles.socialIconsContainer}>
             {user.social_profiles?.linkedin && (
-              <TouchableOpacity style={[styles.socialIcon, styles.linkedinIcon]}>
+              <TouchableOpacity style={[styles.socialIcon, styles.linkedinIcon]}> 
                 <Text style={[styles.socialIconText, styles.linkedinText]}>in</Text>
               </TouchableOpacity>
             )}
@@ -178,6 +182,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
             source={{ uri: (user.profileImages && user.profileImages[1]) || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=500&fit=crop&crop=face' }}
             style={styles.profileImage}
             resizeMode="cover"
+            onError={() => console.log('Failed to load second profile image for:', user.name)}
           />
         </View>
 
@@ -194,6 +199,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onCross, onMatch, isAni
             source={{ uri: (user.profileImages && user.profileImages[2]) || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=500&fit=crop&crop=face' }}
             style={styles.profileImage}
             resizeMode="cover"
+            onError={() => console.log('Failed to load third profile image for:', user.name)}
           />
         </View>
 
@@ -444,13 +450,13 @@ const styles = StyleSheet.create({
   },
   jobTitle: {
     fontSize: 16,
-    fontFamily: 'MontserratSemiBold',
+    fontFamily: 'MontserratRegular',
     color: '#000',
     marginBottom: 4,
   },
   company: {
     fontSize: 16,
-    fontFamily: 'MontserratSemiBold',
+    fontFamily: 'MontserratRegular',
     color: '#000',
     marginBottom: 12,
   },

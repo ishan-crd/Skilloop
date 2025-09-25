@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface CustomizeCardModalProps {
   visible: boolean;
@@ -30,6 +30,7 @@ const colorOptions = [
 ];
 
 export default function CustomizeCardModal({ visible, onClose, onSave, currentCustomizations }: CustomizeCardModalProps) {
+  console.log('CustomizeCardModal rendered with visible:', visible);
   const [customizations, setCustomizations] = useState<CardCustomizations>(currentCustomizations);
 
   const handleColorChange = (field: keyof CardCustomizations, color: string, textColor: string) => {
@@ -46,8 +47,8 @@ export default function CustomizeCardModal({ visible, onClose, onSave, currentCu
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <View style={styles.container}>
+    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
+      <SafeAreaView style={[styles.container, { backgroundColor: '#FFFFFF' }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
             <Text style={styles.cancelText}>Cancel</Text>
@@ -57,8 +58,37 @@ export default function CustomizeCardModal({ visible, onClose, onSave, currentCu
             <Text style={styles.saveText}>Save</Text>
           </TouchableOpacity>
         </View>
-
-        <ScrollView style={styles.content}>
+        
+        <ScrollView 
+          style={styles.content} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Live Preview Section */}
+          <View style={styles.previewSection}>
+            <Text style={styles.previewTitle}>Live Preview</Text>
+            <View style={[styles.previewCard, { backgroundColor: customizations.cardBackgroundColor }]}>
+              <View style={styles.previewProfileImage}>
+                <Text style={styles.previewImageText}>👤</Text>
+              </View>
+              <View style={styles.previewInfo}>
+                <Text style={[styles.previewName, { color: customizations.nameColor }]}>John Doe</Text>
+                <Text style={[styles.previewRole, { color: customizations.roleColor }]}>Full Stack Developer</Text>
+                <Text style={[styles.previewWebsite, { color: customizations.websiteColor }]}>Website/Portfolio</Text>
+                <View style={styles.previewSocialIcons}>
+                  <View style={[styles.previewSocialIcon, styles.linkedinIcon]}>
+                    <Text style={[styles.previewSocialText, styles.linkedinText]}>in</Text>
+                  </View>
+                  <View style={styles.previewSocialIcon}>
+                    <Text style={styles.previewSocialText}>📷</Text>
+                  </View>
+                  <View style={styles.previewSocialIcon}>
+                    <Text style={styles.previewSocialText}>X</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
           {/* Card Background Color */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Card Background</Text>
@@ -159,7 +189,7 @@ export default function CustomizeCardModal({ visible, onClose, onSave, currentCu
             </View>
           </View>
         </ScrollView>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -168,6 +198,85 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  previewSection: {
+    marginBottom: 20,
+  },
+  previewTitle: {
+    fontSize: 18,
+    fontFamily: 'MontserratBold',
+    color: '#000',
+    marginBottom: 12,
+    paddingHorizontal: 20,
+  },
+  previewCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 20,
+    borderWidth: 1,
+    borderColor: '#000000',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  previewProfileImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: '#000000',
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewImageText: {
+    fontSize: 24,
+  },
+  previewInfo: {
+    flex: 1,
+  },
+  previewName: {
+    fontSize: 18,
+    fontFamily: 'MontserratBold',
+    marginBottom: 4,
+  },
+  previewRole: {
+    fontSize: 14,
+    fontFamily: 'MontserratRegular',
+    marginBottom: 8,
+  },
+  previewWebsite: {
+    fontSize: 14,
+    fontFamily: 'MontserratSemiBold',
+    marginBottom: 8,
+  },
+  previewSocialIcons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  previewSocialIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    backgroundColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewSocialText: {
+    fontSize: 10,
+    fontFamily: 'MontserratBold',
+    color: '#000',
+  },
+  linkedinIcon: {
+    backgroundColor: '#0077B5',
+  },
+  linkedinText: {
+    color: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -203,6 +312,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+  scrollContent: {
+    paddingBottom: 100, // Add bottom padding to ensure content doesn't get cut off
   },
   section: {
     marginTop: 30,

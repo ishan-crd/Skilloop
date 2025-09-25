@@ -2,6 +2,7 @@ import * as Font from 'expo-font';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
+    Alert,
     Image,
     KeyboardAvoidingView,
     Platform,
@@ -14,6 +15,7 @@ import {
     View
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { Message as DBMessage, messageService, realtimeService, userService } from '../services/supabase';
 
 interface Message {
   id: string;
@@ -21,6 +23,9 @@ interface Message {
   senderId: string;
   timestamp: string;
   isCurrentUser: boolean;
+  message_type?: string;
+  read_at?: string;
+  created_at: string;
 }
 
 interface ChatUser {
@@ -37,50 +42,24 @@ interface ChatUser {
   };
 }
 
-// Sample chat data
-const sampleMessages: Message[] = [
-  {
-    id: '1',
-    text: 'Hey Dev, Sarah patel this side',
-    senderId: 'sarah',
-    timestamp: '10:30 AM',
-    isCurrentUser: false,
-  },
-  {
-    id: '2',
-    text: 'I really liked your profile btw',
-    senderId: 'sarah',
-    timestamp: '10:31 AM',
-    isCurrentUser: false,
-  },
-  {
-    id: '3',
-    text: 'I have one project for you let me know if you are intrested',
-    senderId: 'sarah',
-    timestamp: '10:32 AM',
-    isCurrentUser: false,
-  },
-  {
-    id: '4',
-    text: 'Hey Sarah',
-    senderId: 'current',
-    timestamp: '10:35 AM',
-    isCurrentUser: true,
-  },
-];
-
-const sampleUser: ChatUser = {
-  id: 'sarah',
-  name: 'Sarah Patel',
-  role: 'App developer',
-  website: 'Website/Portfolio',
-  profileImage: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
-  socialProfiles: {
-    linkedin: 'https://linkedin.com/in/sarahpatel',
-    instagram: 'https://instagram.com/sarahpatel',
-    github: 'https://github.com/sarahpatel',
-    figma: 'https://figma.com/@sarahpatel',
-  },
+// Helper function to convert DB message to UI message
+const convertDBMessageToUIMessage = (dbMessage: DBMessage, currentUserId: string): Message => {
+  const isCurrentUser = dbMessage.sender_id === currentUserId;
+  const timestamp = new Date(dbMessage.created_at).toLocaleTimeString([], { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+  
+  return {
+    id: dbMessage.id,
+    text: dbMessage.message_text,
+    senderId: dbMessage.sender_id,
+    timestamp,
+    isCurrentUser,
+    message_type: dbMessage.message_type,
+    read_at: dbMessage.read_at,
+    created_at: dbMessage.created_at,
+  };
 };
 
 export default function ChatScreen() {
@@ -88,10 +67,16 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [user, setUser] = useState<ChatUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [sendingMessage, setSendingMessage] = useState(false);
   const { user: currentUser } = useAuth();
   const router = useRouter();
   const params = useLocalSearchParams();
   const scrollViewRef = useRef<ScrollView>(null);
+  
+  // Get matchId and otherUserId from params
+  const matchId = params.matchId as string;
+  const otherUserId = params.otherUserId as string;
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -105,31 +90,127 @@ export default function ChatScreen() {
     loadFonts();
   }, []);
 
+  // Load chat data from database
   useEffect(() => {
-    if (fontsLoaded) {
-      // Load sample data for now
-      setMessages(sampleMessages);
-      setUser(sampleUser);
-    }
-  }, [fontsLoaded]);
+    const loadChatData = async () => {
+      if (!fontsLoaded || !currentUser || !matchId || !otherUserId) return;
+      
+      try {
+        setLoading(true);
+        
+        // Load other user's profile data
+        const { data: userData, error: userError } = await userService.getUser(otherUserId);
+        if (userError) {
+          console.error('Error loading user data:', userError);
+          return;
+        }
+        
+        if (userData) {
+          const chatUser: ChatUser = {
+            id: userData.id,
+            name: userData.name,
+            role: userData.job_title || userData.role,
+            website: userData.website,
+            profileImage: userData.profile_images?.[0] || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
+            socialProfiles: userData.social_profiles || {},
+          };
+          setUser(chatUser);
+        }
+        
+        // Load messages for this match
+        const { data: messagesData, error: messagesError } = await messageService.getMatchMessages(matchId, currentUser.id);
+        if (messagesError) {
+          console.error('Error loading messages:', messagesError);
+          return;
+        }
+        
+        if (messagesData) {
+          const uiMessages = messagesData.map((msg: DBMessage) => convertDBMessageToUIMessage(msg, currentUser.id));
+          setMessages(uiMessages);
+          
+          // Mark messages as read
+          await messageService.markAllMessagesAsRead(matchId, currentUser.id);
+        }
+        
+      } catch (error) {
+        console.error('Error loading chat data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadChatData();
+  }, [fontsLoaded, currentUser, matchId, otherUserId]);
+  
+  // Set up real-time messaging subscription
+  useEffect(() => {
+    if (!matchId || !currentUser) return;
+    
+    const subscription = realtimeService.subscribeToMessages(matchId, (payload) => {
+      if (payload.eventType === 'INSERT' && payload.new) {
+        const newMessage = convertDBMessageToUIMessage(payload.new, currentUser.id);
+        setMessages(prev => {
+          // Check if message already exists to avoid duplicates
+          if (prev.some(msg => msg.id === newMessage.id)) {
+            return prev;
+          }
+          return [...prev, newMessage];
+        });
+        
+        // Scroll to bottom when new message arrives
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [matchId, currentUser]);
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      const message: Message = {
-        id: Date.now().toString(),
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !currentUser || !matchId || sendingMessage) return;
+    
+    try {
+      setSendingMessage(true);
+      
+      // Send message to database
+      const { data: messageId, error } = await messageService.sendMessage(
+        matchId,
+        currentUser.id,
+        newMessage.trim()
+      );
+      
+      if (error) {
+        console.error('Error sending message:', error);
+        Alert.alert('Error', 'Failed to send message. Please try again.');
+        return;
+      }
+      
+      // Create optimistic UI message
+      const optimisticMessage: Message = {
+        id: messageId || Date.now().toString(),
         text: newMessage.trim(),
-        senderId: 'current',
+        senderId: currentUser.id,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isCurrentUser: true,
+        created_at: new Date().toISOString(),
       };
       
-      setMessages(prev => [...prev, message]);
+      setMessages(prev => [...prev, optimisticMessage]);
       setNewMessage('');
       
       // Scroll to bottom
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
+      
+    } catch (error) {
+      console.error('Error in handleSendMessage:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -158,7 +239,21 @@ export default function ChatScreen() {
     </View>
   );
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded || loading) return null;
+  
+  // Show error if no match data
+  if (!currentUser || !matchId || !otherUserId) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Unable to load chat</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -174,31 +269,33 @@ export default function ChatScreen() {
 
       {/* Profile Card */}
       {user && (
-        <View style={styles.profileCard}>
-          <Image source={{ uri: user.profileImage }} style={styles.profileImage} />
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{user.name}</Text>
-            <Text style={styles.profileRole}>{user.role}</Text>
-            <TouchableOpacity style={styles.websiteLink}>
-              <Text style={styles.websiteText}>{user.website}</Text>
-            </TouchableOpacity>
-            <View style={styles.socialIcons}>
-              <View style={[styles.socialIcon, { backgroundColor: '#0077B5' }]}>
-                <Text style={styles.socialIconText}>in</Text>
-              </View>
-              <View style={[styles.socialIcon, { backgroundColor: '#E4405F' }]}>
-                <Text style={styles.socialIconText}>📷</Text>
-              </View>
-              <View style={[styles.socialIcon, { backgroundColor: '#333333' }]}>
-                <Text style={styles.socialIconText}>🐙</Text>
-              </View>
-              <View style={[styles.socialIcon, { backgroundColor: '#F24E1E' }]}>
-                <Text style={styles.socialIconText}>🎨</Text>
+        <View style={styles.profileCardContainer}>
+          <View style={styles.profileCard}>
+            <Image source={{ uri: user.profileImage }} style={styles.profileImage} />
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>{user.name}</Text>
+              <Text style={styles.profileRole}>{user.role}</Text>
+              <TouchableOpacity style={styles.websiteLink}>
+                <Text style={styles.websiteText}>{user.website}</Text>
+              </TouchableOpacity>
+              <View style={styles.socialIcons}>
+                <View style={[styles.socialIcon, { backgroundColor: '#0077B5' }]}>
+                  <Text style={styles.socialIconText}>in</Text>
+                </View>
+                <View style={[styles.socialIcon, { backgroundColor: '#E4405F' }]}>
+                  <Text style={styles.socialIconText}>📷</Text>
+                </View>
+                <View style={[styles.socialIcon, { backgroundColor: '#333333' }]}>
+                  <Text style={styles.socialIconText}>🐙</Text>
+                </View>
+                <View style={[styles.socialIcon, { backgroundColor: '#F24E1E' }]}>
+                  <Text style={styles.socialIconText}>🎨</Text>
+                </View>
               </View>
             </View>
-          </View>
-          <View style={styles.arrowButton}>
-            <Text style={styles.arrowIcon}>»</Text>
+            <View style={styles.arrowButton}>
+              <Text style={styles.arrowIcon}>»</Text>
+            </View>
           </View>
         </View>
       )}
@@ -276,14 +373,16 @@ const styles = StyleSheet.create({
     color: '#000',
     fontFamily: 'MontserratBold',
   },
+  profileCardContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
-    marginHorizontal: 20,
-    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -353,12 +452,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   messagesContent: {
-    paddingBottom: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
   messageContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    marginBottom: 12,
+    marginBottom: 16,
+    paddingHorizontal: 4,
   },
   currentUserMessage: {
     justifyContent: 'flex-end',
@@ -403,18 +504,24 @@ const styles = StyleSheet.create({
   inputContainer: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'android' ? 24 : 16,
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
   },
   inputRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     backgroundColor: '#F9FAFB',
     borderRadius: 25,
     paddingHorizontal: 16,
     paddingVertical: 12,
     minHeight: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   inputIcons: {
     flexDirection: 'row',
@@ -429,6 +536,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 1,
   },
   inputIconText: {
     fontSize: 14,
@@ -449,8 +561,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 12,
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
   },
   sendButtonText: {
     fontSize: 18,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    fontFamily: 'MontserratRegular',
+    color: '#6B7280',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontFamily: 'MontserratSemiBold',
+    color: '#3B82F6',
   },
 });

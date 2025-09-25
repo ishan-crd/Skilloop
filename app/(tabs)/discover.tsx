@@ -5,194 +5,15 @@ import CustomBottomNavbar from '../../components/CustomBottomNavbar';
 import ProfileCard from '../../components/ProfileCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMatches } from '../../contexts/MatchesContext';
-import { matchRequestService, supabase, User } from '../../services/supabase';
+import { matchRequestService, profileViewService, supabase } from '../../services/supabase';
 
-// Fallback profiles in case database is empty
-const fallbackProfiles = [
-  {
-    id: '550e8400-e29b-41d4-a716-446655440001',
-    name: 'Sarah Johnson',
-    age: 28,
-    gender: 'Female',
-    location: 'San Francisco',
-    job_title: 'Product Manager',
-    company: 'TechCorp',
-    website: 'https://sarahjohnson.com',
-    bio: 'Experienced product manager with a passion for building user-centric products. I love working with cross-functional teams to deliver exceptional experiences.',
-    role: 'Founder',
-    skills: ['Product Strategy', 'User Research', 'Agile', 'Analytics', 'Leadership'],
-    profile_images: [
-      'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=500&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=500&fit=crop&crop=face'
-    ],
-    social_profiles: {
-      linkedin: 'https://linkedin.com/in/sarahjohnson',
-      twitter: 'https://twitter.com/sarahjohnson'
-    },
-    certificates: [
-      {
-        id: '1',
-        title: 'Certified Scrum Product Owner',
-        organization: 'Scrum Alliance',
-        issueDate: '2023-01-15',
-        imageUri: '',
-        url: ''
-      },
-      {
-        id: '2',
-        title: 'Google Analytics Certified',
-        organization: 'Google',
-        issueDate: '2022-08-20',
-        imageUri: '',
-        url: ''
-      }
-    ],
-    work_experiences: [
-      {
-        id: '1',
-        company: 'TechCorp',
-        position: 'Senior Product Manager',
-        startDate: '2021-03',
-        endDate: '',
-        isCurrent: true,
-        logo: ''
-      },
-      {
-        id: '2',
-        company: 'StartupXYZ',
-        position: 'Product Manager',
-        startDate: '2019-06',
-        endDate: '2021-02',
-        isCurrent: false,
-        logo: ''
-      }
-    ]
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440002',
-    name: 'Alex Chen',
-    age: 25,
-    gender: 'Male',
-    location: 'New York',
-    job_title: 'Software Engineer',
-    company: 'StartupXYZ',
-    website: 'https://alexchen.dev',
-    bio: 'Full-stack developer passionate about building scalable applications. I enjoy working with modern technologies and solving complex problems.',
-    role: 'Freelancer',
-    skills: ['React', 'Node.js', 'Python', 'AWS', 'Docker', 'PostgreSQL'],
-    profile_images: [
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=500&fit=crop&crop=face'
-    ],
-    social_profiles: {
-      linkedin: 'https://linkedin.com/in/alexchen',
-      github: 'https://github.com/alexchen'
-    },
-    certificates: [
-      {
-        id: '1',
-        title: 'AWS Certified Developer',
-        organization: 'Amazon Web Services',
-        issueDate: '2023-05-10',
-        imageUri: '',
-        url: ''
-      },
-      {
-        id: '2',
-        title: 'React Developer Certification',
-        organization: 'Meta',
-        issueDate: '2022-11-15',
-        imageUri: '',
-        url: ''
-      }
-    ],
-    work_experiences: [
-      {
-        id: '1',
-        company: 'StartupXYZ',
-        position: 'Senior Software Engineer',
-        startDate: '2022-01',
-        endDate: '',
-        isCurrent: true,
-        logo: ''
-      },
-      {
-        id: '2',
-        company: 'TechCorp',
-        position: 'Software Engineer',
-        startDate: '2020-06',
-        endDate: '2021-12',
-        isCurrent: false,
-        logo: ''
-      }
-    ]
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440003',
-    name: 'Maria Rodriguez',
-    age: 22,
-    gender: 'Female',
-    location: 'Los Angeles',
-    job_title: 'Design Student',
-    company: 'UCLA',
-    website: 'https://mariarodriguez.design',
-    bio: 'Design student with a passion for creating beautiful and functional interfaces. I love learning about new design trends and user experience principles.',
-    role: 'Student',
-    skills: ['Figma', 'Adobe Creative Suite', 'Sketch', 'Prototyping', 'User Research'],
-    profile_images: [
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=500&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=500&fit=crop&crop=face'
-    ],
-    social_profiles: {
-      linkedin: 'https://linkedin.com/in/mariarodriguez',
-      behance: 'https://behance.net/mariarodriguez'
-    },
-    certificates: [
-      {
-        id: '1',
-        title: 'UI/UX Design Certificate',
-        organization: 'Google',
-        issueDate: '2023-03-20',
-        imageUri: '',
-        url: ''
-      },
-      {
-        id: '2',
-        title: 'Figma Advanced Certification',
-        organization: 'Figma',
-        issueDate: '2022-12-10',
-        imageUri: '',
-        url: ''
-      }
-    ],
-    work_experiences: [
-      {
-        id: '1',
-        company: 'Design Studio Inc',
-        position: 'UI/UX Design Intern',
-        startDate: '2023-06',
-        endDate: '',
-        isCurrent: true,
-        logo: ''
-      },
-      {
-        id: '2',
-        company: 'Freelance Projects',
-        position: 'Graphic Designer',
-        startDate: '2022-01',
-        endDate: '',
-        isCurrent: true,
-        logo: ''
-      }
-    ]
-  }
-];
+// No fallback profiles - only show real users from database
 
 export default function DiscoverScreen() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [profiles, setProfiles] = useState<User[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { addMatch } = useMatches();
   const { user: currentUser, loading: authLoading } = useAuth();
@@ -217,46 +38,78 @@ export default function DiscoverScreen() {
       try {
         console.log('Loading profiles for user:', currentUser.id);
         
-        // Get all users first (simple approach)
+        // Get only users who have completed onboarding
         const { data: allUsers, error: usersError } = await supabase
           .from('users')
           .select('*')
           .eq('is_active', true)
+          .eq('onboarding_completed', true)
           .neq('id', currentUser.id); // Exclude current user
         
         if (usersError) {
           console.error('Error getting users:', usersError);
-          console.log('Using fallback profiles due to error');
-          setProfiles(fallbackProfiles);
+          console.log('No users available due to error');
+          setProfiles([]);
         } else {
-          console.log('All users loaded:', allUsers);
+          console.log('Users with completed onboarding loaded:', allUsers);
           
-          // Filter based on role (simple filtering)
-          let filteredProfiles = allUsers || [];
+          // Get existing match requests to filter out already matched users
+          // Check both sent and received match requests (including rejected ones)
+          const { data: sentRequests, error: sentError } = await supabase
+            .from('match_requests')
+            .select('target_id, status')
+            .eq('requester_id', currentUser.id);
           
-          if (currentUser.role === 'Freelancer') {
-            filteredProfiles = filteredProfiles.filter(user => user.role === 'Founder');
-          } else if (currentUser.role === 'Founder') {
-            filteredProfiles = filteredProfiles.filter(user => ['Student', 'Freelancer'].includes(user.role));
-          } else if (currentUser.role === 'Company') {
-            filteredProfiles = filteredProfiles.filter(user => ['Founder', 'Student', 'Freelancer'].includes(user.role));
-          } else if (currentUser.role === 'Student') {
-            filteredProfiles = filteredProfiles.filter(user => ['Founder', 'Freelancer', 'Company'].includes(user.role));
+          const { data: receivedRequests, error: receivedError } = await supabase
+            .from('match_requests')
+            .select('requester_id, status')
+            .eq('target_id', currentUser.id);
+          
+          if (sentError || receivedError) {
+            console.error('Error getting existing match requests:', sentError || receivedError);
           }
           
-          // If no profiles found, use fallback profiles
-          if (filteredProfiles.length === 0) {
-            console.log('No profiles found, using fallback profiles');
-            filteredProfiles = fallbackProfiles;
-          }
+          // Get list of user IDs that already have match requests (sent or received)
+          // Include all statuses - pending, accepted, and rejected users should not appear again
+          const sentUserIds = new Set((sentRequests || []).map(req => req.target_id));
+          const receivedUserIds = new Set((receivedRequests || []).map(req => req.requester_id));
+          const matchedUserIds = new Set([...sentUserIds, ...receivedUserIds]);
           
-          console.log('Filtered profiles:', filteredProfiles);
-          setProfiles(filteredProfiles);
+          console.log('Filtering out users with existing match requests:', matchedUserIds.size);
+          console.log('Sent requests:', sentRequests);
+          console.log('Received requests:', receivedRequests);
+          
+          // Filter out users who already have match requests (any status)
+          let filteredProfiles = (allUsers || []).filter(user => !matchedUserIds.has(user.id));
+          
+          console.log(`Found ${filteredProfiles.length} profiles to show (excluding ${matchedUserIds.size} already matched)`);
+          
+          // Transform database users to ProfileCard format
+          const transformedProfiles = filteredProfiles.map(user => ({
+            id: user.id,
+            name: user.name,
+            age: user.age,
+            gender: user.gender,
+            location: user.location,
+            jobTitle: user.job_title || '',
+            company: user.company || '',
+            website: user.website,
+            socialProfiles: user.social_profiles || {},
+            profileImages: user.profile_images || [],
+            bio: user.bio,
+            skills: user.skills || [],
+            role: user.role,
+            certificates: user.certificates,
+            workExperiences: user.work_experiences,
+          }));
+          
+          console.log('Final filtered profiles (complete onboarding only):', transformedProfiles);
+          setProfiles(transformedProfiles);
         }
       } catch (error) {
         console.error('Error loading profiles:', error);
-        console.log('Using fallback profiles due to exception');
-        setProfiles(fallbackProfiles);
+        console.log('No profiles available due to exception');
+        setProfiles([]);
       } finally {
         setLoading(false);
       }
@@ -265,20 +118,16 @@ export default function DiscoverScreen() {
     loadProfiles();
   }, [currentUser, fontsLoaded]);
 
-  const handleCross = () => {
+  const handleCross = async () => {
     if (isAnimating || !currentUser || profiles.length === 0) return;
     
     const targetUser = profiles[currentProfileIndex];
-    const isFallbackProfile = targetUser && targetUser.id.startsWith('550e8400');
     
-    if (isFallbackProfile) {
-      // For fallback profiles, just move to next profile without any database calls
-      setIsAnimating(true);
-      setTimeout(() => {
-        setCurrentProfileIndex(prev => (prev + 1) % profiles.length);
-        setIsAnimating(false);
-      }, 300);
-      return;
+    // Record profile view for all profiles
+    try {
+      await profileViewService.recordProfileView(currentUser.id, targetUser.id);
+    } catch (error) {
+      console.error('Error recording profile view:', error);
     }
     
     setIsAnimating(true);
@@ -294,31 +143,10 @@ export default function DiscoverScreen() {
     const targetUser = profiles[currentProfileIndex];
     if (!targetUser) return;
 
-    // Check if this is a fallback profile (starts with '550e8400')
-    const isFallbackProfile = targetUser.id.startsWith('550e8400');
-    
-    if (isFallbackProfile) {
-      // For fallback profiles, just show a message and move to next profile
-      Alert.alert(
-        'Demo Mode', 
-        'This is a demo profile. In the real app, you would be able to match with real users!',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              setIsAnimating(true);
-              setTimeout(() => {
-                setCurrentProfileIndex(prev => (prev + 1) % profiles.length);
-                setIsAnimating(false);
-              }, 300);
-            }
-          }
-        ]
-      );
-      return;
-    }
-
     try {
+      // Record profile view
+      await profileViewService.recordProfileView(currentUser.id, targetUser.id);
+      
       // Create match request in database
       const { error } = await matchRequestService.createMatchRequest(
         currentUser.id,
@@ -331,12 +159,19 @@ export default function DiscoverScreen() {
         return;
       }
 
-      // Add to local matches for immediate UI feedback
+      // Remove the matched user from profiles immediately
+      setProfiles(prev => prev.filter(user => user.id !== targetUser.id));
+      
+      // Add to local matches for immediate UI feedback (already transformed)
       addMatch(targetUser);
       
+      // Move to next profile or show empty state
       setIsAnimating(true);
       setTimeout(() => {
-        setCurrentProfileIndex(prev => (prev + 1) % profiles.length);
+        setCurrentProfileIndex(prev => {
+          const newIndex = prev >= profiles.length - 1 ? 0 : prev + 1;
+          return newIndex;
+        });
         setIsAnimating(false);
       }, 300);
 
@@ -378,8 +213,8 @@ export default function DiscoverScreen() {
           />
         ) : (
           <View style={styles.noMoreProfiles}>
-            <Text style={styles.noMoreText}>No more profiles to show!</Text>
-            <Text style={styles.noMoreSubtext}>Check back later for new connections</Text>
+            <Text style={styles.noMoreText}>No profiles left!</Text>
+            <Text style={styles.noMoreSubtext}>You've seen all available profiles. Check back later for new connections!</Text>
           </View>
         )}
       </View>

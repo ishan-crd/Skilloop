@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface EditCardModalProps {
   visible: boolean;
@@ -10,17 +10,20 @@ interface EditCardModalProps {
 
 interface UserInfo {
   name: string;
-  age: string;
-  gender: string;
-  location: string;
   jobTitle: string;
   company: string;
   website: string;
-  bio: string;
-  role: string;
+  socialProfiles: {
+    linkedin?: string;
+    instagram?: string;
+    twitter?: string;
+    figma?: string;
+    upwork?: string;
+  };
 }
 
 export default function EditCardModal({ visible, onClose, onSave, currentUserInfo }: EditCardModalProps) {
+  console.log('EditCardModal rendered with visible:', visible);
   const [userInfo, setUserInfo] = useState<UserInfo>(currentUserInfo);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -33,34 +36,15 @@ export default function EditCardModal({ visible, onClose, onSave, currentUserInf
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
+    
     if (!userInfo.name.trim()) {
       newErrors.name = 'Name is required';
-    }
-    if (!userInfo.age.trim()) {
-      newErrors.age = 'Age is required';
-    } else if (isNaN(Number(userInfo.age)) || Number(userInfo.age) < 1 || Number(userInfo.age) > 120) {
-      newErrors.age = 'Please enter a valid age';
-    }
-    if (!userInfo.gender) {
-      newErrors.gender = 'Please select your gender';
-    }
-    if (!userInfo.location.trim()) {
-      newErrors.location = 'Location is required';
     }
     if (!userInfo.jobTitle.trim()) {
       newErrors.jobTitle = 'Job title is required';
     }
     if (!userInfo.company.trim()) {
       newErrors.company = 'Company is required';
-    }
-    if (!userInfo.bio.trim()) {
-      newErrors.bio = 'Bio is required';
-    } else {
-      const wordCount = userInfo.bio.trim().split(/\s+/).filter(word => word.length > 0).length;
-      if (wordCount < 10) {
-        newErrors.bio = 'Bio must be at least 10 words';
-      }
     }
 
     setErrors(newErrors);
@@ -75,8 +59,8 @@ export default function EditCardModal({ visible, onClose, onSave, currentUserInf
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <View style={styles.container}>
+    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
+      <SafeAreaView style={[styles.container, { backgroundColor: '#FFFFFF' }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
             <Text style={styles.cancelText}>Cancel</Text>
@@ -86,8 +70,46 @@ export default function EditCardModal({ visible, onClose, onSave, currentUserInf
             <Text style={styles.saveText}>Save</Text>
           </TouchableOpacity>
         </View>
-
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        
+        <ScrollView 
+          style={styles.content} 
+          showsVerticalScrollIndicator={false} 
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Live Preview Section */}
+          <View style={styles.previewSection}>
+            <Text style={styles.previewTitle}>Live Preview</Text>
+            <View style={styles.previewCard}>
+              <View style={styles.previewProfileImage}>
+                <Text style={styles.previewImageText}>👤</Text>
+              </View>
+              <View style={styles.previewInfo}>
+                <Text style={styles.previewName}>{userInfo.name || 'Your Name'}</Text>
+                <Text style={styles.previewRole}>{userInfo.jobTitle || 'Your Job Title'}</Text>
+                <Text style={styles.previewCompany}>{userInfo.company || 'Your Company'}</Text>
+                {userInfo.website && (
+                  <Text style={styles.previewWebsite}>{userInfo.website}</Text>
+                )}
+                <View style={styles.previewSocialIcons}>
+                  {userInfo.socialProfiles?.linkedin && (
+                    <View style={[styles.previewSocialIcon, styles.linkedinIcon]}>
+                      <Text style={[styles.previewSocialText, styles.linkedinText]}>in</Text>
+                    </View>
+                  )}
+                  {userInfo.socialProfiles?.instagram && (
+                    <View style={styles.previewSocialIcon}>
+                      <Text style={styles.previewSocialText}>📷</Text>
+                    </View>
+                  )}
+                  {userInfo.socialProfiles?.twitter && (
+                    <View style={styles.previewSocialIcon}>
+                      <Text style={styles.previewSocialText}>X</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
+          </View>
           {/* Basic Information */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Basic Information</Text>
@@ -207,7 +229,7 @@ export default function EditCardModal({ visible, onClose, onSave, currentUserInf
             </View>
           </View>
         </ScrollView>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -216,6 +238,89 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  previewSection: {
+    marginBottom: 20,
+  },
+  previewTitle: {
+    fontSize: 18,
+    fontFamily: 'MontserratBold',
+    color: '#000',
+    marginBottom: 12,
+    paddingHorizontal: 20,
+  },
+  previewCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 20,
+    borderWidth: 1,
+    borderColor: '#000000',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  previewProfileImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: '#000000',
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewImageText: {
+    fontSize: 24,
+  },
+  previewInfo: {
+    flex: 1,
+  },
+  previewName: {
+    fontSize: 18,
+    fontFamily: 'MontserratBold',
+    color: '#000',
+    marginBottom: 4,
+  },
+  previewRole: {
+    fontSize: 14,
+    fontFamily: 'MontserratRegular',
+    color: '#000',
+    marginBottom: 4,
+  },
+  previewCompany: {
+    fontSize: 14,
+    fontFamily: 'MontserratRegular',
+    color: '#000',
+    marginBottom: 8,
+  },
+  previewWebsite: {
+    fontSize: 14,
+    fontFamily: 'MontserratSemiBold',
+    color: '#3B82F6',
+    marginBottom: 8,
+  },
+  previewSocialIcons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  previewSocialIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    backgroundColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewSocialText: {
+    fontSize: 10,
+    fontFamily: 'MontserratBold',
+    color: '#000',
   },
   header: {
     flexDirection: 'row',
@@ -251,6 +356,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+  scrollContent: {
+    paddingBottom: 100, // Add bottom padding to ensure content doesn't get cut off
   },
   section: {
     marginTop: 30,

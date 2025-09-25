@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CustomBottomNavbar from '../../components/CustomBottomNavbar';
 import { useAuth } from '../../contexts/AuthContext';
+import { matchService } from '../../services/supabase';
 
 interface Conversation {
   id: string;
@@ -11,41 +12,10 @@ interface Conversation {
   lastMessage: string;
   profileImage: string;
   timestamp?: string;
+  otherUserId?: string; // Add other user's ID for navigation
 }
 
-// Sample messages matching the UI design
-const sampleConversations: Conversation[] = [
-  {
-    id: '1',
-    name: 'Sarah Patel',
-    lastMessage: 'hey the deadline is 6th march',
-    profileImage: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
-  },
-  {
-    id: '2',
-    name: 'Andrew',
-    lastMessage: "What's the update?",
-    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-  },
-  {
-    id: '3',
-    name: 'Sam Kontas',
-    lastMessage: 'Hey I have one work for you',
-    profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-  },
-  {
-    id: '4',
-    name: 'Ayush Jha',
-    lastMessage: 'Hello',
-    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-  },
-  {
-    id: '5',
-    name: 'Rupali',
-    lastMessage: 'I have some work for you',
-    profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face',
-  },
-];
+// No sample conversations - only show real conversations from database
 
 export default function MessagesScreen() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -53,6 +23,17 @@ export default function MessagesScreen() {
   const [loading, setLoading] = useState(true);
   const { user: currentUser, loading: authLoading } = useAuth();
   const router = useRouter();
+
+  const handleConversationPress = (conversation: Conversation) => {
+    // Navigate to chat with the conversation data
+    router.push({
+      pathname: '/chat',
+      params: {
+        matchId: conversation.id,
+        otherUserId: conversation.id, // This should be the other user's ID
+      },
+    });
+  };
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -68,11 +49,28 @@ export default function MessagesScreen() {
 
   useEffect(() => {
     const loadConversations = async () => {
-      if (!fontsLoaded) return;
+      if (!fontsLoaded || !currentUser) return;
 
       try {
-        // Use sample data for now
-        setConversations(sampleConversations);
+        // Load real conversations from database
+        const { data: matchesData, error } = await matchService.getUserMatches(currentUser.id);
+        
+        if (error) {
+          console.error('Error loading conversations:', error);
+          setConversations([]);
+        } else {
+          // Transform matches to conversation format
+          const conversationsList = (matchesData || []).map(match => ({
+            id: match.match_id,
+            name: match.other_user_name,
+            lastMessage: 'Start a conversation...', // Default message since we don't have last message yet
+            profileImage: match.other_user_profile_images?.[0] || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
+            timestamp: match.last_message_at,
+            otherUserId: match.other_user_id, // Add other user's ID
+          }));
+          
+          setConversations(conversationsList);
+        }
       } catch (error) {
         console.error('Error loading conversations:', error);
         setConversations([]);
@@ -82,7 +80,7 @@ export default function MessagesScreen() {
     };
 
     loadConversations();
-  }, [fontsLoaded]);
+  }, [fontsLoaded, currentUser]);
 
   if (!fontsLoaded || authLoading || loading) return null;
 
@@ -110,19 +108,26 @@ export default function MessagesScreen() {
 
       {/* Conversations List */}
       <ScrollView style={styles.conversationsList} showsVerticalScrollIndicator={false}>
-        {conversations.map((conversation) => (
-          <TouchableOpacity 
-            key={conversation.id} 
-            style={styles.conversationCard}
-            onPress={() => router.push('/chat')}
-          >
-            <Image source={{ uri: conversation.profileImage }} style={styles.profileImage} />
-            <View style={styles.conversationInfo}>
-              <Text style={styles.conversationName}>{conversation.name}</Text>
-              <Text style={styles.lastMessage}>{conversation.lastMessage}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+        {conversations.length > 0 ? (
+          conversations.map((conversation) => (
+            <TouchableOpacity 
+              key={conversation.id} 
+              style={styles.conversationCard}
+              onPress={() => handleConversationPress(conversation)}
+            >
+              <Image source={{ uri: conversation.profileImage }} style={styles.profileImage} />
+              <View style={styles.conversationInfo}>
+                <Text style={styles.conversationName}>{conversation.name}</Text>
+                <Text style={styles.lastMessage}>{conversation.lastMessage}</Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No messages yet</Text>
+            <Text style={styles.emptyStateSubtext}>Start matching with people on the Discover page to begin conversations!</Text>
+          </View>
+        )}
       </ScrollView>
       <CustomBottomNavbar />
     </SafeAreaView>
@@ -255,6 +260,27 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   noConversationsSubtext: {
+    fontSize: 16,
+    fontFamily: 'MontserratRegular',
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    paddingTop: 100,
+  },
+  emptyStateText: {
+    fontSize: 20,
+    fontFamily: 'MontserratBold',
+    color: '#374151',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyStateSubtext: {
     fontSize: 16,
     fontFamily: 'MontserratRegular',
     color: '#6B7280',

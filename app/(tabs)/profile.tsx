@@ -1,12 +1,13 @@
 import * as Font from 'expo-font';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CustomBottomNavbar from '../../components/CustomBottomNavbar';
 import CustomizeCardModal from '../../components/CustomizeCardModal';
 import EditCardModal from '../../components/EditCardModal';
 import HubPage from '../../components/HubPage';
 import { useAuth } from '../../contexts/AuthContext';
+import { userService } from '../../services/supabase';
 
 interface UserInfo {
   name: string;
@@ -76,32 +77,132 @@ export default function ProfileScreen() {
     loadFonts();
   }, []);
 
-  // Update userInfo when currentUser changes
+  // Load user data from database
   useEffect(() => {
-    console.log('Profile page - currentUser changed:', currentUser);
-    if (currentUser) {
-      console.log('Setting user info from currentUser:', currentUser);
-      setUserInfo({
-        name: currentUser.name || '',
-        age: currentUser.age?.toString() || '',
-        gender: currentUser.gender || '',
-        location: currentUser.location || '',
-        jobTitle: currentUser.job_title || '',
-        company: currentUser.company || '',
-        website: currentUser.website || '',
-        bio: currentUser.bio || '',
-        role: currentUser.role || '',
-        profileImages: currentUser.profile_images || [],
-      });
-    }
+    const loadUserData = async () => {
+      if (!currentUser) return;
+      
+      try {
+        console.log('Profile page - loading user data for:', currentUser.id);
+        
+        // Get fresh user data from database
+        const { data: userData, error } = await userService.getUser(currentUser.id);
+        
+        if (error) {
+          console.error('Error loading user data:', error);
+          // Fallback to current user data
+          setUserInfo({
+            name: currentUser.name || '',
+            age: currentUser.age?.toString() || '',
+            gender: currentUser.gender || '',
+            location: currentUser.location || '',
+            jobTitle: currentUser.job_title || '',
+            company: currentUser.company || '',
+            website: currentUser.website || '',
+            bio: currentUser.bio || '',
+            role: currentUser.role || '',
+            profileImages: currentUser.profile_images || [],
+          });
+          return;
+        }
+        
+        if (userData) {
+          console.log('Setting user info from database:', userData);
+          setUserInfo({
+            name: userData.name || '',
+            age: userData.age?.toString() || '',
+            gender: userData.gender || '',
+            location: userData.location || '',
+            jobTitle: userData.job_title || '',
+            company: userData.company || '',
+            website: userData.website || '',
+            bio: userData.bio || '',
+            role: userData.role || '',
+            profileImages: userData.profile_images || [],
+          });
+          
+          // Load customizations if they exist
+          if (userData.customizations) {
+            try {
+              const customizations = JSON.parse(userData.customizations);
+              setCardCustomizations(customizations);
+            } catch (error) {
+              console.error('Error parsing customizations:', error);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error in loadUserData:', error);
+      }
+    };
+    
+    loadUserData();
   }, [currentUser]);
 
-  const handleCustomizeSave = (customizations: CardCustomizations) => {
-    setCardCustomizations(customizations);
+  // Debug modal state changes
+  useEffect(() => {
+    console.log('Modal state changed:', { showCustomizeModal, showEditModal, showBusinessCard });
+  }, [showCustomizeModal, showEditModal, showBusinessCard]);
+
+  const handleCustomizeSave = async (customizations: CardCustomizations) => {
+    if (!currentUser) return;
+    
+    try {
+      // Update local state immediately for UI feedback
+      setCardCustomizations(customizations);
+      
+      // Save customizations to database (add customizations field to users table)
+      const { error } = await userService.updateUser(currentUser.id, { 
+        customizations: JSON.stringify(customizations) 
+      });
+      
+      if (error) {
+        console.error('Error saving card customizations:', error);
+        Alert.alert('Error', 'Failed to save card customizations. Please try again.');
+        return;
+      }
+      
+      Alert.alert('Success', 'Your card design has been updated successfully!');
+    } catch (error) {
+      console.error('Error saving card customizations:', error);
+      Alert.alert('Error', 'Failed to save card customizations. Please try again.');
+    }
   };
 
-  const handleEditSave = (userData: UserInfo) => {
-    setUserInfo(userData);
+  const handleEditSave = async (userData: UserInfo) => {
+    if (!currentUser) return;
+    
+    try {
+      // Convert UserInfo to database format
+      const updateData = {
+        name: userData.name,
+        age: parseInt(userData.age),
+        gender: userData.gender,
+        location: userData.location,
+        job_title: userData.jobTitle,
+        company: userData.company,
+        website: userData.website,
+        bio: userData.bio,
+        role: userData.role,
+      };
+      
+      // Save to database
+      const { error } = await userService.updateUser(currentUser.id, updateData);
+      
+      if (error) {
+        console.error('Error updating user:', error);
+        Alert.alert('Error', 'Failed to save changes. Please try again.');
+        return;
+      }
+      
+      // Update local state
+      setUserInfo(userData);
+      
+      Alert.alert('Success', 'Your profile has been updated successfully!');
+    } catch (error) {
+      console.error('Error saving user data:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    }
   };
 
   const handleLogout = async () => {
@@ -158,6 +259,9 @@ export default function ProfileScreen() {
   const handleMyCardPress = () => {
     setShowBusinessCard(true);
   };
+
+  // Debug logging for modal states
+  console.log('Modal states:', { showCustomizeModal, showEditModal, showBusinessCard });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -310,38 +414,79 @@ export default function ProfileScreen() {
                 <Text style={styles.primaryButtonText}>Add card to home screen</Text>
               </TouchableOpacity>
               
-              <TouchableOpacity 
-                style={styles.secondaryButton}
-                onPress={() => setShowCustomizeModal(true)}
-              >
-                <Text style={styles.secondaryButtonText}>Customize your card</Text>
-                <Text style={styles.pencilIcon}>✏️</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.tertiaryButton}
-                onPress={() => setShowEditModal(true)}
-              >
-                <Text style={styles.tertiaryButtonText}>Edit your card</Text>
-                <Text style={styles.pencilIcon}>✏️</Text>
-              </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.secondaryButton}
+          onPress={() => {
+            console.log('Customize button pressed');
+            setShowBusinessCard(false); // Close business card modal first
+            setTimeout(() => {
+              setShowCustomizeModal(true); // Then open customize modal
+            }, 100);
+          }}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.secondaryButtonText}>Customize your card</Text>
+          <Text style={styles.pencilIcon}>✏️</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.tertiaryButton}
+          onPress={() => {
+            console.log('Edit button pressed');
+            setShowBusinessCard(false); // Close business card modal first
+            setTimeout(() => {
+              setShowEditModal(true); // Then open edit modal
+            }, 100);
+          }}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.tertiaryButtonText}>Edit your card</Text>
+          <Text style={styles.pencilIcon}>✏️</Text>
+        </TouchableOpacity>
             </View>
           </ScrollView>
         </SafeAreaView>
       </Modal>
 
-      {/* Modals */}
+      {/* Debug info */}
+      {__DEV__ && (
+        <View style={{ position: 'absolute', top: 100, left: 10, backgroundColor: 'rgba(0,0,0,0.8)', padding: 10, borderRadius: 5 }}>
+          <Text style={{ color: 'white', fontSize: 12 }}>
+            Customize: {showCustomizeModal ? 'true' : 'false'}
+          </Text>
+          <Text style={{ color: 'white', fontSize: 12 }}>
+            Edit: {showEditModal ? 'true' : 'false'}
+          </Text>
+          <Text style={{ color: 'white', fontSize: 12 }}>
+            Business Card: {showBusinessCard ? 'true' : 'false'}
+          </Text>
+        </View>
+      )}
+
+      {/* Modals - Moved outside business card modal */}
       <CustomizeCardModal
         visible={showCustomizeModal}
-        onClose={() => setShowCustomizeModal(false)}
-        onSave={handleCustomizeSave}
+        onClose={() => {
+          console.log('Customize modal closing');
+          setShowCustomizeModal(false);
+        }}
+        onSave={(customizations) => {
+          handleCustomizeSave(customizations);
+          setShowCustomizeModal(false);
+        }}
         currentCustomizations={cardCustomizations}
       />
       
       <EditCardModal
         visible={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        onSave={handleEditSave}
+        onClose={() => {
+          console.log('Edit modal closing');
+          setShowEditModal(false);
+        }}
+        onSave={(userData) => {
+          handleEditSave(userData);
+          setShowEditModal(false);
+        }}
         currentUserInfo={userInfo}
       />
       
