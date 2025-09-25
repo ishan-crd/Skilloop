@@ -90,12 +90,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signOut = async () => {
     try {
+      console.log('Starting sign out process...');
       const result = await authService.signOut();
+      console.log('Sign out result:', result);
+      
       if (result.success) {
         setUser(null);
+        console.log('User state cleared, redirecting to sign in...');
+      } else {
+        console.error('Sign out failed:', result.message);
+        throw new Error(result.message);
       }
     } catch (error) {
-      console.log('Error signing out:', error);
+      console.error('Error signing out:', error);
+      throw error;
     }
   };
 

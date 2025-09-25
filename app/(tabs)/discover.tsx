@@ -5,7 +5,7 @@ import CustomBottomNavbar from '../../components/CustomBottomNavbar';
 import ProfileCard from '../../components/ProfileCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMatches } from '../../contexts/MatchesContext';
-import { matchRequestService, profileViewService, supabase } from '../../services/supabase';
+import { matchRequestService, matchService, profileViewService, supabase } from '../../services/supabase';
 
 // No fallback profiles - only show real users from database
 
@@ -69,20 +69,30 @@ export default function DiscoverScreen() {
             console.error('Error getting existing match requests:', sentError || receivedError);
           }
           
+          // Get actual matches (accepted match requests)
+          const { data: userMatches, error: matchesError } = await matchService.getUserMatches(currentUser.id);
+          if (matchesError) {
+            console.error('Error getting user matches:', matchesError);
+          }
+          
           // Get list of user IDs that already have match requests (sent or received)
           // Include all statuses - pending, accepted, and rejected users should not appear again
           const sentUserIds = new Set((sentRequests || []).map(req => req.target_id));
           const receivedUserIds = new Set((receivedRequests || []).map(req => req.requester_id));
-          const matchedUserIds = new Set([...sentUserIds, ...receivedUserIds]);
+          const matchUserIds = new Set((userMatches || []).map(match => match.other_user_id));
           
-          console.log('Filtering out users with existing match requests:', matchedUserIds.size);
+          // Combine all user IDs that should be excluded
+          const excludedUserIds = new Set([...sentUserIds, ...receivedUserIds, ...matchUserIds]);
+          
+          console.log('Filtering out users with existing interactions:', excludedUserIds.size);
           console.log('Sent requests:', sentRequests);
           console.log('Received requests:', receivedRequests);
+          console.log('Actual matches:', userMatches);
           
-          // Filter out users who already have match requests (any status)
-          let filteredProfiles = (allUsers || []).filter(user => !matchedUserIds.has(user.id));
+          // Filter out users who already have any interaction (match requests or actual matches)
+          let filteredProfiles = (allUsers || []).filter(user => !excludedUserIds.has(user.id));
           
-          console.log(`Found ${filteredProfiles.length} profiles to show (excluding ${matchedUserIds.size} already matched)`);
+          console.log(`Found ${filteredProfiles.length} profiles to show (excluding ${excludedUserIds.size} already interacted with)`);
           
           // Transform database users to ProfileCard format
           const transformedProfiles = filteredProfiles.map(user => ({

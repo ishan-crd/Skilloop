@@ -4,10 +4,14 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface HubPageProps {
   onMyCardPress: () => void;
+  onSettingsPress?: () => void;
+  onLogoutPress?: () => void;
+  onMyProfilePress?: () => void;
 }
 
-const HubPage: React.FC<HubPageProps> = ({ onMyCardPress }) => {
+const HubPage: React.FC<HubPageProps> = ({ onMyCardPress, onSettingsPress, onLogoutPress, onMyProfilePress }) => {
   const { user } = useAuth();
+  const [showDropdown, setShowDropdown] = React.useState(false);
 
   const featureCards = [
     {
@@ -52,24 +56,56 @@ const HubPage: React.FC<HubPageProps> = ({ onMyCardPress }) => {
   };
 
   return (
-    <ScrollView 
-      style={styles.container} 
-      showsVerticalScrollIndicator={false}
-      // Android-specific optimizations
-      removeClippedSubviews={Platform.OS === 'android'}
-      scrollEventThrottle={16}
-    >
+    <View style={styles.container}>
+      {showDropdown && (
+        <TouchableOpacity 
+          style={styles.overlay}
+          onPress={() => setShowDropdown(false)}
+          activeOpacity={1}
+        />
+      )}
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        // Android-specific optimizations
+        removeClippedSubviews={Platform.OS === 'android'}
+        scrollEventThrottle={16}
+      >
       {/* Profile Header */}
       <View style={styles.profileHeader}>
-        <TouchableOpacity style={styles.editButton}>
-          <Text style={styles.editIcon}>✏️</Text>
+        <TouchableOpacity 
+          style={styles.menuButton}
+          onPress={() => setShowDropdown(!showDropdown)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.hamburgerContainer}>
+            <View style={styles.hamburgerDot} />
+            <View style={styles.hamburgerDot} />
+            <View style={styles.hamburgerDot} />
+          </View>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.filterButton}>
-          <Text style={styles.filterIcon}>⋮</Text>
-        </TouchableOpacity>
+        {/* Dropdown Menu */}
+        {showDropdown && (
+          <View style={styles.dropdown}>
+            <TouchableOpacity 
+              style={styles.dropdownItem}
+              onPress={() => {
+                setShowDropdown(false);
+                onLogoutPress?.();
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.dropdownText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         
-        <TouchableOpacity style={styles.settingsButton}>
+        <TouchableOpacity 
+          style={styles.settingsButton}
+          onPress={onSettingsPress}
+          activeOpacity={0.7}
+        >
           <Text style={styles.settingsIcon}>⚙️</Text>
         </TouchableOpacity>
 
@@ -85,7 +121,11 @@ const HubPage: React.FC<HubPageProps> = ({ onMyCardPress }) => {
           <Text style={styles.userName}>{user?.name || 'Erik Tyler'}</Text>
           
           <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.myProfileButton}>
+            <TouchableOpacity 
+              style={styles.myProfileButton}
+              onPress={onMyProfilePress}
+              activeOpacity={0.7}
+            >
               <Text style={styles.buttonText}>My Profile</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.myCardButton} onPress={onMyCardPress}>
@@ -275,7 +315,8 @@ const HubPage: React.FC<HubPageProps> = ({ onMyCardPress }) => {
           <Text style={styles.unlockMessage}>{featureCards[4].description}</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -283,6 +324,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 15,
   },
   profileHeader: {
     backgroundColor: '#FFFFFF',
@@ -301,23 +353,50 @@ const styles = StyleSheet.create({
       shadowRadius: 2,
     }),
   },
-  editButton: {
+  menuButton: {
     position: 'absolute',
     top: 20,
     left: 20,
     zIndex: 10,
+    padding: 4,
   },
-  editIcon: {
-    fontSize: 20,
+  hamburgerContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
   },
-  filterButton: {
+  hamburgerDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#000000',
+  },
+  dropdown: {
     position: 'absolute',
-    top: 20,
-    right: 50,
-    zIndex: 10,
+    top: 50,
+    left: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 20,
+    minWidth: 120,
   },
-  filterIcon: {
-    fontSize: 16,
+  dropdownItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  dropdownText: {
+    fontSize: 14,
+    fontFamily: 'MontserratSemiBold',
     color: '#000000',
   },
   settingsButton: {

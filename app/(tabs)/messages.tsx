@@ -30,7 +30,7 @@ export default function MessagesScreen() {
       pathname: '/chat',
       params: {
         matchId: conversation.id,
-        otherUserId: conversation.id, // This should be the other user's ID
+        otherUserId: conversation.otherUserId, // Use the correct other user's ID
       },
     });
   };

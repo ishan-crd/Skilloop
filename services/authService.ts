@@ -466,11 +466,21 @@ class AuthService {
   async signOut(): Promise<{ success: boolean; message: string }> {
     try {
       const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      
+      // Clear Supabase session
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out from Supabase:', error);
+      }
+      
+      // Clear stored user data
       await AsyncStorage.removeItem('currentUser');
       
       // Clear stored OTP and phone
       this.storedOTP = null;
       this.storedPhone = null;
+      
+      console.log('User signed out successfully');
       
       return {
         success: true,

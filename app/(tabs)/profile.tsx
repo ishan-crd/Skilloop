@@ -1,5 +1,5 @@
 import * as Font from 'expo-font';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Animated, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CustomBottomNavbar from '../../components/CustomBottomNavbar';
@@ -39,6 +39,7 @@ export default function ProfileScreen() {
   const [showBusinessCard, setShowBusinessCard] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
   const { user: currentUser, loading: authLoading, signOut } = useAuth();
+  const router = useRouter();
   
   const flipAnimation = useRef(new Animated.Value(0)).current;
   
@@ -145,26 +146,35 @@ export default function ProfileScreen() {
   }, [showCustomizeModal, showEditModal, showBusinessCard]);
 
   const handleCustomizeSave = async (customizations: CardCustomizations) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      console.error('No current user found');
+      Alert.alert('Error', 'No user logged in. Please try again.');
+      return;
+    }
     
     try {
+      console.log('Saving customizations for user:', currentUser.id);
+      console.log('Customizations data:', customizations);
+      
       // Update local state immediately for UI feedback
       setCardCustomizations(customizations);
       
       // Save customizations to database (add customizations field to users table)
-      const { error } = await userService.updateUser(currentUser.id, { 
+      const { data, error } = await userService.updateUser(currentUser.id, { 
         customizations: JSON.stringify(customizations) 
       });
       
       if (error) {
-        console.error('Error saving card customizations:', error);
-        Alert.alert('Error', 'Failed to save card customizations. Please try again.');
+        console.error('Database error saving card customizations:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        Alert.alert('Error', `Failed to save card customizations: ${error.message}`);
         return;
       }
       
+      console.log('Card customizations saved successfully:', data);
       Alert.alert('Success', 'Your card design has been updated successfully!');
     } catch (error) {
-      console.error('Error saving card customizations:', error);
+      console.error('Unexpected error saving card customizations:', error);
       Alert.alert('Error', 'Failed to save card customizations. Please try again.');
     }
   };
@@ -205,14 +215,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      router.replace('/signin');
-    } catch (error) {
-      console.error('Error during logout:', error);
-    }
-  };
 
   const handleCardFlip = () => {
     const toValue = isFlipped ? 0 : 1;
@@ -260,12 +262,37 @@ export default function ProfileScreen() {
     setShowBusinessCard(true);
   };
 
+  const handleSettingsPress = () => {
+    router.push('/settings');
+  };
+
+  const handleLogoutPress = async () => {
+    try {
+      console.log('Logout button pressed');
+      await signOut();
+      console.log('Sign out successful, navigating to sign in...');
+      router.replace('/signin');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      Alert.alert('Error', `Failed to logout: ${error.message || 'Please try again.'}`);
+    }
+  };
+
+  const handleMyProfilePress = () => {
+    router.push('/profile-view');
+  };
+
   // Debug logging for modal states
   console.log('Modal states:', { showCustomizeModal, showEditModal, showBusinessCard });
 
   return (
     <SafeAreaView style={styles.container}>
-      <HubPage onMyCardPress={handleMyCardPress} />
+      <HubPage 
+        onMyCardPress={handleMyCardPress} 
+        onSettingsPress={handleSettingsPress}
+        onLogoutPress={handleLogoutPress}
+        onMyProfilePress={handleMyProfilePress}
+      />
       
       {/* Business Card Modal */}
       <Modal
@@ -448,20 +475,6 @@ export default function ProfileScreen() {
         </SafeAreaView>
       </Modal>
 
-      {/* Debug info */}
-      {__DEV__ && (
-        <View style={{ position: 'absolute', top: 100, left: 10, backgroundColor: 'rgba(0,0,0,0.8)', padding: 10, borderRadius: 5 }}>
-          <Text style={{ color: 'white', fontSize: 12 }}>
-            Customize: {showCustomizeModal ? 'true' : 'false'}
-          </Text>
-          <Text style={{ color: 'white', fontSize: 12 }}>
-            Edit: {showEditModal ? 'true' : 'false'}
-          </Text>
-          <Text style={{ color: 'white', fontSize: 12 }}>
-            Business Card: {showBusinessCard ? 'true' : 'false'}
-          </Text>
-        </View>
-      )}
 
       {/* Modals - Moved outside business card modal */}
       <CustomizeCardModal

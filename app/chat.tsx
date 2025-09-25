@@ -95,6 +95,8 @@ export default function ChatScreen() {
     const loadChatData = async () => {
       if (!fontsLoaded || !currentUser || !matchId || !otherUserId) return;
       
+      console.log('Loading chat data with params:', { matchId, otherUserId, currentUserId: currentUser.id });
+      
       try {
         setLoading(true);
         
@@ -102,6 +104,14 @@ export default function ChatScreen() {
         const { data: userData, error: userError } = await userService.getUser(otherUserId);
         if (userError) {
           console.error('Error loading user data:', userError);
+          console.error('Other user ID:', otherUserId);
+          Alert.alert('Error', `Failed to load user profile: ${userError.message}`);
+          return;
+        }
+        
+        if (!userData) {
+          console.error('No user data found for ID:', otherUserId);
+          Alert.alert('Error', 'User profile not found');
           return;
         }
         
