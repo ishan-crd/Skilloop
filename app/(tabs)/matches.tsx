@@ -4,17 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CustomBottomNavbar from '../../components/CustomBottomNavbar';
 import { useAuth } from '../../contexts/AuthContext';
-import { useMatches } from '../../contexts/MatchesContext';
-import { matchRequestService, matchService } from '../../services/supabase';
+import { matchRequestService } from '../../services/supabase';
 
 // No sample matches - only show real matches from database
 
 export default function MatchesScreen() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [matchRequests, setMatchRequests] = useState<any[]>([]);
-  const [actualMatches, setActualMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { matches } = useMatches();
   const { user: currentUser, loading: authLoading } = useAuth();
   const router = useRouter();
 
@@ -44,17 +41,8 @@ export default function MatchesScreen() {
           setMatchRequests(requestsData || []);
         }
 
-        // Get actual matches (people you've matched with)
-        const { data: matchesData, error: matchesError } = await matchService.getUserMatches(currentUser.id);
-        if (matchesError) {
-          console.error('Error getting matches:', matchesError);
-        } else {
-          console.log('Actual matches loaded:', matchesData);
-          setActualMatches(matchesData || []);
-        }
-
         // Log the results for debugging
-        console.log(`Loaded ${requestsData?.length || 0} match requests and ${matchesData?.length || 0} actual matches`);
+        console.log(`Loaded ${requestsData?.length || 0} match requests`);
       } catch (error) {
         console.error('Error loading matches:', error);
       } finally {
@@ -80,10 +68,6 @@ export default function MatchesScreen() {
 
       console.log('Match accepted successfully:', data);
       Alert.alert('Match Accepted!', `You've matched with ${requesterName}! You can now start chatting.`);
-      
-      // Refresh matches
-      const { data: matchesData } = await matchService.getUserMatches(currentUser.id);
-      setActualMatches(matchesData || []);
       
       // Remove from match requests
       setMatchRequests(prev => prev.filter(req => req.id !== requestId));
@@ -116,20 +100,6 @@ export default function MatchesScreen() {
     }
   };
   
-  const handleNavigateToChat = (match: any) => {
-    if (!match.match_id || !match.other_user_id) {
-      Alert.alert('Error', 'Unable to start chat. Please try again.');
-      return;
-    }
-    
-    router.push({
-      pathname: '/chat',
-      params: {
-        matchId: match.match_id,
-        otherUserId: match.other_user_id,
-      },
-    });
-  };
 
   if (!fontsLoaded || authLoading || loading) return null;
 
@@ -221,58 +191,11 @@ export default function MatchesScreen() {
           </View>
         )}
 
-        {/* Actual Matches */}
-        {actualMatches.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Your Matches</Text>
-            {actualMatches.map((match) => (
-              <View key={match.match_id} style={styles.matchCard}>
-                <Image 
-                  source={{ 
-                    uri: match.other_user_profile_images?.[0] || 
-                         match.other_user_profile_image || 
-                         'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face' 
-                  }} 
-                  style={styles.profileImage}
-                  onError={() => console.log('Match image failed to load for:', match.other_user_name)}
-                />
-                
-                <View style={styles.matchInfo}>
-                  <Text style={styles.matchName}>{match.other_user_name}</Text>
-                  <Text style={styles.matchRole}>{match.other_user_job_title || 'Professional'}</Text>
-                  
-                  <TouchableOpacity style={styles.websiteLink}>
-                    <Text style={styles.websiteText}>Website/Portfolio</Text>
-                  </TouchableOpacity>
-                  
-                  <View style={styles.socialIcons}>
-                    <View style={[styles.socialIcon, styles.linkedinIcon]}>
-                      <Text style={[styles.socialIconText, styles.linkedinText]}>in</Text>
-                    </View>
-                    <View style={styles.socialIcon}>
-                      <Text style={styles.socialIconText}>📷</Text>
-                    </View>
-                    <View style={styles.socialIcon}>
-                      <Text style={styles.socialIconText}>X</Text>
-                    </View>
-                  </View>
-                </View>
-                
-                <TouchableOpacity 
-                  style={styles.chatButton}
-                  onPress={() => handleNavigateToChat(match)}
-                >
-                  <Text style={styles.chatIcon}>💬</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
 
         {/* Empty State */}
-        {matchRequests.length === 0 && actualMatches.length === 0 && !loading && (
+        {matchRequests.length === 0 && !loading && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>No matches yet</Text>
+            <Text style={styles.emptyStateText}>No match requests yet</Text>
             <Text style={styles.emptyStateSubtext}>Start swiping on the Discover page to find your professional connections!</Text>
           </View>
         )}

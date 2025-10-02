@@ -186,8 +186,8 @@ export const matchRequestService = {
       })
       .eq('id', requestId)
       .eq('target_id', rejecterId)
-      .select()
-      .single();
+      .eq('status', 'pending')
+      .select();
     return { data, error };
   },
 };
